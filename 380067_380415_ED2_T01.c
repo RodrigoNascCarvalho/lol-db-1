@@ -30,7 +30,7 @@ int checkPrimaryIndex (void) {
 
 int checkWinnerIndex (void) {
 	FILE* winnerFile;
-	if ((winnerFile = fopen ("iwinner.idx", "r+")) != NULL && ) {
+	if ((winnerFile = fopen ("iwinner.idx", "r+")) != NULL) {
 		return 1;
 	} else {
 		return 0;	
@@ -39,7 +39,7 @@ int checkWinnerIndex (void) {
 
 int checkMVPIndex (void) {
 	FILE* mvpFile;
-	if ((mvpFile = fopen ("iwinner.idx", "r+")) != NULL && ) {
+	if ((mvpFile = fopen ("iwinner.idx", "r+")) != NULL) {
 		return 1;
 	} else {
 		return 0;	
@@ -47,7 +47,7 @@ int checkMVPIndex (void) {
 }
 
 void createPrimaryIndex (FILE* dataFile) {
-	
+
 }
 
 void createSecondaryIndexes (FILE* dataFile) {
