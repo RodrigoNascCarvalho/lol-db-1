@@ -13,6 +13,34 @@
 int main (int argc, char *argv[]) {
 	int runningProgram = 1;
 	char menuOption;
+	FILE *matchFile, *primaryIndexFile, *winnerIndexFile, *mvpIndexFile;
+	primaryIndex *primaryIndexArray;
+	winnerIndex *winnerIndexArray;
+	mvpIndex *mvpIndexArray;
+
+	primaryIndexArray = malloc (sizeof (primaryIndex) * MAX_SIZE);
+	winnerIndexArray = malloc (sizeof (winnerIndex) * MAX_SIZE);
+	mvpIndexArray = malloc (sizeof (mvpIndex) * MAX_SIZE);
+
+	/*
+		Check if matches.dat exists and creates it if necessary
+	*/
+	if ((matchFile = fileExists(matchFile, "matches.dat")) == NULL) {
+		matchFile = createFile(matchFile, "matches.dat");
+	}
+
+	primaryIndexFile = fileExists(primaryIndexFile, "iprimary.idx");
+	winnerIndexFile = fileExists(winnerIndexFile, "iwinner.idx");
+	mvpIndexFile = fileExists(mvpIndexFile, "imvp.idx");
+
+	if (primaryIndexFile && winnerIndexFile && mvpIndexFile) {
+		
+	} else {
+		primaryIndexFile = createFile(primaryIndexFile, "iprimary.idx");
+		winnerIndexFile = createFile(winnerIndexFile, "iwinner.idx");
+		mvpIndexFile = createFile(mvpIndexFile, "imvp.idx");
+		createIndexes (matchFile, primaryIndexFile, primaryIndexArray, winnerIndexFile, winnerIndexArray, mvpIndexFile, mvpIndexArray);
+	}
 
 	while (runningProgram) {
 		printf("1. Cadastrar\n");

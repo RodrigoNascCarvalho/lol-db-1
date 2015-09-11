@@ -10,48 +10,112 @@
 #include <string.h>
 #include "380067_380415_ED2_T01.h"
 
-int checkDataFile (void) {
-	FILE* file;
-	if ((file = fopen ("matches.dat", "r+")) != NULL) {
-		return 1;
+FILE* fileExists (FILE *file, char* name) {
+	if ((file = fopen (name, "r+")) != NULL) {
+		return file;
 	} else {
-		return 0;	
+		return NULL;
 	}
 }
 
-int checkPrimaryIndex (void) {
-	FILE* indexFile;
-	if ((indexFile = fopen ("iprimary.idx", "r+")) != NULL) {
-		return 1;
-	} else {
-		return 0;	
+FILE* createFile (FILE *file, char* name) {
+	file = fopen (name, "w+");
+	return file;
+}
+
+int compareKeys (const void *a, const void *b) {
+	const primaryIndex *primary_a = (primaryIndex*) a;
+	const primaryIndex *primary_b = (primaryIndex*) b;
+	return strcmp (primary_a->primaryKey, primary_b->primaryKey);
+}
+
+int compareWinnerKeys (const void *a, const void *b) {
+	const winnerIndex *winner_a = (winnerIndex*) a;
+	const winnerIndex *winner_b = (winnerIndex*) b;
+	return strcmp (winner_a->primaryKey, winner_b->primaryKey);
+}
+
+int compareWinner (const void *a, const void *b) {
+	const winnerIndex *winner_a = (winnerIndex*) a;
+	const winnerIndex *winner_b = (winnerIndex*) b;
+	return strcmp (winner_a->winner, winner_b->winner);
+}
+
+int compareMVPKeys (const void *a, const void *b) {
+	const mvpIndex *mvp_a = (mvpIndex*) a;
+	const mvpIndex *mvp_b = (mvpIndex*) b;
+	return strcmp (mvp_a->primaryKey, mvp_b->primaryKey);
+}
+
+int compareMVP (const void *a, const void *b) {
+	const mvpIndex *mvp_a = (mvpIndex*) a;
+	const mvpIndex *mvp_b = (mvpIndex*) b;
+	return strcmp (mvp_a->mvpNickname, mvp_b->mvpNickname);
+}
+
+void savePrimaryIndex (FILE *file, primaryIndex *primaryIndexArray, int size) {
+	int i;
+	for (i = 0; i < size; i += 1) {
+		fprintf(file, "%s@%d@\n", primaryIndexArray[i].primaryKey, primaryIndexArray[i].offset);
 	}
 }
 
-int checkWinnerIndex (void) {
-	FILE* winnerFile;
-	if ((winnerFile = fopen ("iwinner.idx", "r+")) != NULL) {
-		return 1;
-	} else {
-		return 0;	
+void saveWinnerIndex (FILE *file, winnerIndex *winnerIndexArray, int size) {
+	int i;
+	for (i = 0; i < size; i += 1) {
+		fprintf(file, "%s@%s@\n", winnerIndexArray[i].winner ,winnerIndexArray[i].primaryKey);
 	}
 }
 
-int checkMVPIndex (void) {
-	FILE* mvpFile;
-	if ((mvpFile = fopen ("iwinner.idx", "r+")) != NULL) {
-		return 1;
-	} else {
-		return 0;	
+void saveMVPIndex (FILE *file, mvpIndex *mvpIndexArray, int size) {
+	int i;
+	for (i = 0; i < size; i += 1) {
+		fprintf(file, "%s@%s@\n", mvpIndexArray[i].mvpNickname , mvpIndexArray[i].primaryKey);
 	}
 }
 
-void createPrimaryIndex (FILE* dataFile) {
+void createIndexes (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryIndexArray, 
+						FILE* winnerFile, winnerIndex *winnerIndexArray, 
+						FILE* mvpFile, mvpIndex *mvpIndexArray) {
+	int registerCount, fileSize, i, freturn;
+	char* test;
 
-}
+	if(fseek (dataFile, 0, SEEK_END) == 0) {
+		fileSize = ftell (dataFile);
+	}
+	registerCount = fileSize / REG_SIZE;
 
-void createSecondaryIndexes (FILE* dataFile) {
+	for (i = 0; i < registerCount; i += 1) {
+		fseek (dataFile, (REG_SIZE * i), SEEK_SET);
 
+		fscanf (dataFile, "%[^@]@%*[^@]@%*[^@]@%*[^@]@%*[^@]@%[^@]@%*[^@]@%*[^@]@%[^@]@", 
+				primaryIndexArray[i].primaryKey, winnerIndexArray[i].winner, mvpIndexArray[i].mvpNickname);
+
+		strcpy (winnerIndexArray[i].primaryKey, primaryIndexArray[i].primaryKey);
+		strcpy (mvpIndexArray[i].primaryKey, primaryIndexArray[i].primaryKey);
+
+		primaryIndexArray[i].offset = REG_SIZE * i;
+		primaryIndexArray[i].flag = 1;
+	}
+	/*
+		Sort primary index, save primary index
+	*/
+	qsort (primaryIndexArray, registerCount, sizeof(primaryIndex), compareKeys);
+	savePrimaryIndex (primaryFile, primaryIndexArray, registerCount);
+
+	/*
+		Sort winner index first by primary index, then by name, save primary index
+	*/
+	qsort (winnerIndexArray, registerCount, sizeof(winnerIndex), compareWinnerKeys);
+	qsort (winnerIndexArray, registerCount, sizeof(winnerIndex), compareWinner);
+	saveWinnerIndex (winnerFile, winnerIndexArray, registerCount);
+
+	/*
+		Sort mvp index first by primary index, then by name, save primary index
+	*/
+	qsort (mvpIndexArray, registerCount, sizeof(mvpIndex), compareMVPKeys);
+	qsort (mvpIndexArray, registerCount, sizeof(mvpIndex), compareMVP);
+	saveMVPIndex (mvpFile, mvpIndexArray, registerCount);
 }
 
 void loadIndexes (primaryIndex **primaryIndex, winnerIndex **winnerIndex, mvpIndex **mvpIndex) {

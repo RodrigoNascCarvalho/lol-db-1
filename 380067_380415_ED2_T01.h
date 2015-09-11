@@ -1,45 +1,60 @@
 #ifndef _380067_380415_ED2_T01_   
 #define _380067_380415_ED2_T01_
 
+#define REG_SIZE 192
+#define MAX_SIZE 1000
+
 typedef struct lolMatch {
-	char* blueTeam;
-	char* redTeam;
-	char* winnerTeam;
-	char* mvpNickname;
-	char date[10];
-	char matchDuratio[5];
-	char blueTeamScore[2];
-	char redTeamScore[2];
-	char primaryKey[8];
+	char blueTeam[40];
+	char redTeam[40];
+	char winnerTeam[40];
+	char mvpNickname[40];
+	char date[11];
+	char matchDuration[6];
+	char blueTeamScore[3];
+	char redTeamScore[3];
+	char primaryKey[9];
 } lolMatch;
 
 typedef struct primaryIndex {
-	char primaryKey[8];
+	char primaryKey[9];
 	int offset;
 	int flag;
 } primaryIndex;
 
 typedef struct winnerIndex {
-	char* winner;
-	char primaryKey[8];
+	char winner[40];
+	char primaryKey[9];
 } winnerIndex;
 
 typedef struct mvpIndex {
-	char* mvpNickname;
-	char primaryKey[8];
+	char mvpNickname[40];
+	char primaryKey[9];
 } mvpIndex;
 
-int checkDataFile (void);
+FILE* fileExists (FILE *file, char* name);
 
-int checkPrimaryIndex (void);
+FILE* createFile (FILE *file, char* name);
 
-int checkWinnerIndex (void);
+int compareKeys (const void *a, const void *b);
 
-int checkMVPIndex (void);
+int compareWinnerKeys (const void *a, const void *b);
 
-void createPrimaryIndex (FILE* dataFile);
+int compareWinner (const void *a, const void *b);
 
-void createSecondaryIndexes (FILE* dataFile);
+int compareMVPKeys (const void *a, const void *b);
+
+int compareMVP (const void *a, const void *b);
+
+void savePrimaryIndex (FILE *file, primaryIndex *primaryIndex, int size);
+
+void saveWinnerIndex (FILE *file, winnerIndex *winnerIndexArray, int size);
+
+void saveMVPIndex (FILE *file, mvpIndex *mvpIndexArray, int size);
+
+void createIndexes (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryIndexArray, 
+					FILE* winnerFile, winnerIndex *winnerIndexArray, 
+					FILE* mvpFile, mvpIndex *mvpIndexArray);
 
 void loadIndexes (primaryIndex **primaryIndex, winnerIndex **winnerIndex, mvpIndex **mvpIndex);
 
