@@ -34,13 +34,37 @@ int main (int argc, char *argv[]) {
 	mvpIndexFile = fileExists(mvpIndexFile, "imvp.idx");
 
 	if (primaryIndexFile && winnerIndexFile && mvpIndexFile) {
-		
+		if (checkIndexConsistency(primaryIndexFile)) {
+			loadIndexes (primaryIndexFile, primaryIndexArray, 
+							winnerIndexFile, winnerIndexArray, mvpIndexFile, mvpIndexArray);
+		} else {
+			primaryIndexFile = createFile(primaryIndexFile, "iprimary.idx");
+			winnerIndexFile = createFile(winnerIndexFile, "iwinner.idx");
+			mvpIndexFile = createFile(mvpIndexFile, "imvp.idx");
+			createIndexes (matchFile, primaryIndexFile, primaryIndexArray, 
+							winnerIndexFile, winnerIndexArray, mvpIndexFile, mvpIndexArray);
+		}
 	} else {
 		primaryIndexFile = createFile(primaryIndexFile, "iprimary.idx");
 		winnerIndexFile = createFile(winnerIndexFile, "iwinner.idx");
 		mvpIndexFile = createFile(mvpIndexFile, "imvp.idx");
-		createIndexes (matchFile, primaryIndexFile, primaryIndexArray, winnerIndexFile, winnerIndexArray, mvpIndexFile, mvpIndexArray);
+		createIndexes (matchFile, primaryIndexFile, primaryIndexArray, 
+						winnerIndexFile, winnerIndexArray, mvpIndexFile, mvpIndexArray);
 	}
+	
+	/* testing if this is loading all indexes
+	int i;
+	for (i = 0; i < 9; i++) {
+		printf("%s %d\n", primaryIndexArray[i].primaryKey, primaryIndexArray[i].offset);
+	}
+
+	for (i = 0; i < 9; i++) {
+		printf("%s %s\n", winnerIndexArray[i].primaryKey, winnerIndexArray[i].winner);
+	}
+
+	for (i = 0; i < 9; i++) {
+		printf("%s %s\n", mvpIndexArray[i].primaryKey, mvpIndexArray[i].mvpNickname);
+	}*/
 
 	while (runningProgram) {
 		printf("1. Cadastrar\n");

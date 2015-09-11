@@ -55,6 +55,7 @@ int compareMVP (const void *a, const void *b) {
 
 void savePrimaryIndex (FILE *file, primaryIndex *primaryIndexArray, int size) {
 	int i;
+	fprintf(file, "%d\n", 1);
 	for (i = 0; i < size; i += 1) {
 		fprintf(file, "%s@%d@\n", primaryIndexArray[i].primaryKey, primaryIndexArray[i].offset);
 	}
@@ -71,6 +72,27 @@ void saveMVPIndex (FILE *file, mvpIndex *mvpIndexArray, int size) {
 	int i;
 	for (i = 0; i < size; i += 1) {
 		fprintf(file, "%s@%s@\n", mvpIndexArray[i].mvpNickname , mvpIndexArray[i].primaryKey);
+	}
+}
+
+void loadPrimaryIndex (FILE *file, primaryIndex *primaryIndexArray) {
+	int i = 0;
+	while (fscanf (file, "%[^@]@%d@\n", primaryIndexArray[i].primaryKey, &primaryIndexArray[i].offset) == 2) {
+		i++;
+	}
+}
+
+void loadWinnerIndex (FILE *file, winnerIndex *winnerIndexArray) {
+	int i = 0;
+	while (fscanf (file, "%[^@]@%[^@]@\n", winnerIndexArray[i].winner ,winnerIndexArray[i].primaryKey) == 2) {
+		i++;
+	}
+}
+
+void loadMVPIndex (FILE *file, mvpIndex *mvpIndexArray) {
+	int i = 0;
+	while (fscanf (file, "%[^@]@%[^@]@\n", mvpIndexArray[i].mvpNickname , mvpIndexArray[i].primaryKey) == 2) {
+		i++;
 	}
 }
 
@@ -95,7 +117,6 @@ void createIndexes (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryInde
 		strcpy (mvpIndexArray[i].primaryKey, primaryIndexArray[i].primaryKey);
 
 		primaryIndexArray[i].offset = REG_SIZE * i;
-		primaryIndexArray[i].flag = 1;
 	}
 	/*
 		Sort primary index, save primary index
@@ -118,8 +139,18 @@ void createIndexes (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryInde
 	saveMVPIndex (mvpFile, mvpIndexArray, registerCount);
 }
 
-void loadIndexes (primaryIndex **primaryIndex, winnerIndex **winnerIndex, mvpIndex **mvpIndex) {
+int checkIndexConsistency (FILE* primaryFile) {
+	int isOk; 
+	fscanf(primaryFile, "%d\n", &isOk);
+	return isOk;
+}
 
+void loadIndexes (FILE* primaryFile, primaryIndex *primaryIndexArray, 
+						FILE* winnerFile, winnerIndex *winnerIndexArray, 
+						FILE* mvpFile, mvpIndex *mvpIndexArray) {
+	loadPrimaryIndex (primaryFile, primaryIndexArray);
+	loadWinnerIndex (winnerFile, winnerIndexArray);
+	loadMVPIndex (mvpFile, mvpIndexArray);
 }
 
 void insertMatch (FILE* dataFile, lolMatch match) {

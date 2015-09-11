@@ -19,7 +19,6 @@ typedef struct lolMatch {
 typedef struct primaryIndex {
 	char primaryKey[9];
 	int offset;
-	int flag;
 } primaryIndex;
 
 typedef struct winnerIndex {
@@ -56,7 +55,11 @@ void createIndexes (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryInde
 					FILE* winnerFile, winnerIndex *winnerIndexArray, 
 					FILE* mvpFile, mvpIndex *mvpIndexArray);
 
-void loadIndexes (primaryIndex **primaryIndex, winnerIndex **winnerIndex, mvpIndex **mvpIndex);
+int checkIndexConsistency (FILE* primaryFile);
+
+void loadIndexes (FILE* primaryFile, primaryIndex *primaryIndexArray, 
+						FILE* winnerFile, winnerIndex *winnerIndexArray, 
+						FILE* mvpFile, mvpIndex *mvpIndexArray);
 
 void insertMatch (FILE* dataFile, lolMatch match);
 
