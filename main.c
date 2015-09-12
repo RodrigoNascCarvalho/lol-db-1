@@ -11,7 +11,7 @@
 #include "380067_380415_ED2_T01.h"
 
 int main (int argc, char *argv[]) {
-	int runningProgram = 1;
+	int runningProgram = 1, registerCount;
 	char menuOption;
 	FILE *matchFile, *primaryIndexFile, *winnerIndexFile, *mvpIndexFile;
 	primaryIndex *primaryIndexArray;
@@ -35,46 +35,25 @@ int main (int argc, char *argv[]) {
 
 	if (primaryIndexFile && winnerIndexFile && mvpIndexFile) {
 		if (checkIndexConsistency(primaryIndexFile)) {
-			loadIndexes (primaryIndexFile, primaryIndexArray, 
+			registerCount = loadIndexes (primaryIndexFile, primaryIndexArray, 
 							winnerIndexFile, winnerIndexArray, mvpIndexFile, mvpIndexArray);
 		} else {
 			primaryIndexFile = createFile(primaryIndexFile, "iprimary.idx");
 			winnerIndexFile = createFile(winnerIndexFile, "iwinner.idx");
 			mvpIndexFile = createFile(mvpIndexFile, "imvp.idx");
-			createIndexes (matchFile, primaryIndexFile, primaryIndexArray, 
+			registerCount = createIndexes (matchFile, primaryIndexFile, primaryIndexArray, 
 							winnerIndexFile, winnerIndexArray, mvpIndexFile, mvpIndexArray);
 		}
 	} else {
 		primaryIndexFile = createFile(primaryIndexFile, "iprimary.idx");
 		winnerIndexFile = createFile(winnerIndexFile, "iwinner.idx");
 		mvpIndexFile = createFile(mvpIndexFile, "imvp.idx");
-		createIndexes (matchFile, primaryIndexFile, primaryIndexArray, 
+		registerCount = createIndexes (matchFile, primaryIndexFile, primaryIndexArray, 
 						winnerIndexFile, winnerIndexArray, mvpIndexFile, mvpIndexArray);
 	}
-	
-	/* testing if this is loading all indexes
-	int i;
-	for (i = 0; i < 9; i++) {
-		printf("%s %d\n", primaryIndexArray[i].primaryKey, primaryIndexArray[i].offset);
-	}
-
-	for (i = 0; i < 9; i++) {
-		printf("%s %s\n", winnerIndexArray[i].primaryKey, winnerIndexArray[i].winner);
-	}
-
-	for (i = 0; i < 9; i++) {
-		printf("%s %s\n", mvpIndexArray[i].primaryKey, mvpIndexArray[i].mvpNickname);
-	}*/
 
 	while (runningProgram) {
-		printf("1. Cadastrar\n");
-		printf("2. Alteração\n");
-		printf("3. Remoção\n");
-		printf("4. Busca\n");
-		printf("5. Listagem\n");
-		printf("6. Liberar Espaço\n");
-		printf("7. Finalizar\n");
-
+		printOptions();
 		scanf(" %c", &menuOption);
 
 		switch(menuOption) {
@@ -88,10 +67,10 @@ int main (int argc, char *argv[]) {
 				/*TODO Remove*/
 				break;
 			case '4':
-				/*TODO Search*/
+				searchMatches (matchFile, primaryIndexArray, winnerIndexArray, mvpIndexArray, registerCount);
 				break;
 			case '5':
-				/*TODO List*/
+				listMatches (matchFile, primaryIndexArray, winnerIndexArray, mvpIndexArray, registerCount);
 				break;
 			case '6':
 				/*TODO Free Space*/
@@ -104,6 +83,14 @@ int main (int argc, char *argv[]) {
 				break;
 		}
 	}
+
+	free(primaryIndexArray);
+	free(winnerIndexArray);
+	free(mvpIndexArray);
+	fclose(matchFile);
+	fclose(primaryIndexFile);
+	fclose(mvpIndexFile);
+	fclose(winnerIndexFile);
 
 	return 0;
 }

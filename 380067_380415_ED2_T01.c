@@ -29,6 +29,12 @@ int compareKeys (const void *a, const void *b) {
 	return strcmp (primary_a->primaryKey, primary_b->primaryKey);
 }
 
+int compareKeyWithWinner(const void *a, const void *b) { 
+	const primaryIndex *primary_a = (primaryIndex*) a;
+	const winnerIndex *winner_b = (winnerIndex*) b;
+	return strcmp (primary_a->primaryKey, winner_b->primaryKey);	
+}
+
 int compareWinnerKeys (const void *a, const void *b) {
 	const winnerIndex *winner_a = (winnerIndex*) a;
 	const winnerIndex *winner_b = (winnerIndex*) b;
@@ -53,6 +59,27 @@ int compareMVP (const void *a, const void *b) {
 	return strcmp (mvp_a->mvpNickname, mvp_b->mvpNickname);
 }
 
+/*
+	Generic binarySearch, hopefully reusable for the future =D 
+*/
+int binarySearch (void* array, void* key, int start, int end, size_t size, int (*compare)(const void*, const void*)) {
+	int middle;
+	void *middleElement;
+	if (end < start) { 
+		return -1;
+	} else {
+		middle = start + ((end - start)/2);
+		middleElement = array + middle * size;
+		if ((*compare)(middleElement, key) < 0) { 
+			binarySearch (array, key, middle + 1, end, size, compare);
+		} else if ((*compare)(middleElement, key) > 0) { 
+			binarySearch (array, key, start, middle - 1, size, compare);
+		} else { 
+			return middle;
+		}
+	}
+}
+
 void savePrimaryIndex (FILE *file, primaryIndex *primaryIndexArray, int size) {
 	int i;
 	fprintf(file, "%d\n", 1);
@@ -75,11 +102,12 @@ void saveMVPIndex (FILE *file, mvpIndex *mvpIndexArray, int size) {
 	}
 }
 
-void loadPrimaryIndex (FILE *file, primaryIndex *primaryIndexArray) {
+int loadPrimaryIndex (FILE *file, primaryIndex *primaryIndexArray) {
 	int i = 0;
 	while (fscanf (file, "%[^@]@%d@\n", primaryIndexArray[i].primaryKey, &primaryIndexArray[i].offset) == 2) {
 		i++;
 	}
+	return i;
 }
 
 void loadWinnerIndex (FILE *file, winnerIndex *winnerIndexArray) {
@@ -96,7 +124,7 @@ void loadMVPIndex (FILE *file, mvpIndex *mvpIndexArray) {
 	}
 }
 
-void createIndexes (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryIndexArray, 
+int createIndexes (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryIndexArray, 
 						FILE* winnerFile, winnerIndex *winnerIndexArray, 
 						FILE* mvpFile, mvpIndex *mvpIndexArray) {
 	int registerCount, fileSize, i, freturn;
@@ -137,6 +165,8 @@ void createIndexes (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryInde
 	qsort (mvpIndexArray, registerCount, sizeof(mvpIndex), compareMVPKeys);
 	qsort (mvpIndexArray, registerCount, sizeof(mvpIndex), compareMVP);
 	saveMVPIndex (mvpFile, mvpIndexArray, registerCount);
+
+	return registerCount;
 }
 
 int checkIndexConsistency (FILE* primaryFile) {
@@ -145,12 +175,14 @@ int checkIndexConsistency (FILE* primaryFile) {
 	return isOk;
 }
 
-void loadIndexes (FILE* primaryFile, primaryIndex *primaryIndexArray, 
+int loadIndexes (FILE* primaryFile, primaryIndex *primaryIndexArray, 
 						FILE* winnerFile, winnerIndex *winnerIndexArray, 
 						FILE* mvpFile, mvpIndex *mvpIndexArray) {
-	loadPrimaryIndex (primaryFile, primaryIndexArray);
+	int registerCount;
+	registerCount = loadPrimaryIndex (primaryFile, primaryIndexArray);
 	loadWinnerIndex (winnerFile, winnerIndexArray);
 	loadMVPIndex (mvpFile, mvpIndexArray);
+	return registerCount;
 }
 
 void insertMatch (FILE* dataFile, lolMatch match) {
@@ -165,16 +197,193 @@ void removeMatch (FILE* dataFile, char* primaryKey) {
 
 }
 
-void printMatchesOrderByPrimaryKey (FILE* dataFile, primaryIndex **index, int searchOption) {
+void printMatchesOrderByPrimaryKey (FILE* dataFile, primaryIndex *index, int size) {
+	int i;
+	lolMatch match;
+	for (i = 0; i < size; i += 1) { 
+		fseek (dataFile, index[i].offset, SEEK_SET);
+		fscanf (dataFile, "%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@", 
+				match.primaryKey, match.blueTeam, match.redTeam, match.date,
+				match.matchDuration, match.winnerTeam, match.blueTeamScore,
+				match.redTeamScore, match.mvpNickname);
 
+		printf("%s\n", match.primaryKey);
+		printf("%s\n", match.blueTeam);
+		printf("%s\n", match.redTeam);
+		printf("%s\n", match.date);
+		printf("%s\n", match.matchDuration);
+		printf("%s\n", match.winnerTeam);
+		printf("%s\n", match.blueTeamScore);
+		printf("%s\n", match.redTeamScore);
+		printf("%s\n", match.mvpNickname);
+		printf("\n");	
+	}
 }
 
-void printMatchesOrderByWinner (FILE* dataFile, winnerIndex **index, int searchOption) {
+void printMatchesOrderByWinner (FILE* dataFile, winnerIndex *index, primaryIndex *primaryArray, int size) {
+	int i, primaryPosition;
+	primaryIndex element;
+	lolMatch match;
+	for (i = 0; i < size; i += 1) {
+		strcpy (element.primaryKey, index[i].primaryKey);
+		primaryPosition = binarySearch (primaryArray, &element, 0, size - 1, sizeof(primaryIndex), compareKeys);
+		if (primaryPosition != -1) {
+			fseek (dataFile, primaryArray[primaryPosition].offset, SEEK_SET);
+			fscanf (dataFile, "%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@", 
+					match.primaryKey, match.blueTeam, match.redTeam, match.date,
+					match.matchDuration, match.winnerTeam, match.blueTeamScore,
+					match.redTeamScore, match.mvpNickname);
 
+			printf("%s\n", match.primaryKey);
+			printf("%s\n", match.blueTeam);
+			printf("%s\n", match.redTeam);
+			printf("%s\n", match.date);
+			printf("%s\n", match.matchDuration);
+			printf("%s\n", match.winnerTeam);
+			printf("%s\n", match.blueTeamScore);
+			printf("%s\n", match.redTeamScore);
+			printf("%s\n", match.mvpNickname);
+			printf("\n");
+		}
+	}
 }
 
-void printMatchesOrderByMVP (FILE* dataFile, mvpIndex **index, int searchOption) {
+void printMatchesOrderByMVP (FILE* dataFile, mvpIndex *index, primaryIndex *primaryArray, int size) {
+	int i, primaryPosition;
+	primaryIndex element;
+	lolMatch match;
+	for (i = 0; i < size; i += 1) {
+		strcpy (element.primaryKey, index[i].primaryKey);
+		primaryPosition = binarySearch (primaryArray, &element, 0, size - 1, sizeof(primaryIndex), compareKeys);
+		if (primaryPosition != -1) {
+			fseek (dataFile, primaryArray[primaryPosition].offset, SEEK_SET);
+			fscanf (dataFile, "%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@", 
+					match.primaryKey, match.blueTeam, match.redTeam, match.date,
+					match.matchDuration, match.winnerTeam, match.blueTeamScore,
+					match.redTeamScore, match.mvpNickname);
 
+			printf("%s\n", match.primaryKey);
+			printf("%s\n", match.blueTeam);
+			printf("%s\n", match.redTeam);
+			printf("%s\n", match.date);
+			printf("%s\n", match.matchDuration);
+			printf("%s\n", match.winnerTeam);
+			printf("%s\n", match.blueTeamScore);
+			printf("%s\n", match.redTeamScore);
+			printf("%s\n", match.mvpNickname);
+			printf("\n");
+		}
+	}
+}
+
+void searchMatchesOrderByPrimaryKey (FILE* dataFile, primaryIndex *index, primaryIndex element, int size) {
+	int primaryPosition;
+	lolMatch match;
+
+	primaryPosition = binarySearch (index, &element, 0, size - 1, sizeof(primaryIndex), compareKeys);
+ 	
+ 	if (primaryPosition != -1) { 
+ 		fseek (dataFile, index[primaryPosition].offset, SEEK_SET);
+ 		fscanf (dataFile, "%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@", 
+ 				match.primaryKey, match.blueTeam, match.redTeam, match.date,
+ 				match.matchDuration, match.winnerTeam, match.blueTeamScore,
+ 				match.redTeamScore, match.mvpNickname);
+
+ 		printf("%s\n", match.primaryKey);
+ 		printf("%s\n", match.blueTeam);
+ 		printf("%s\n", match.redTeam);
+ 		printf("%s\n", match.date);
+ 		printf("%s\n", match.matchDuration);
+ 		printf("%s\n", match.winnerTeam);
+ 		printf("%s\n", match.blueTeamScore);
+ 		printf("%s\n", match.redTeamScore);
+ 		printf("%s\n", match.mvpNickname);
+ 		printf("\n");
+ 	} else { 
+ 		printf("Registro não encontrado!\n");
+ 	}
+}
+
+void searchMatchesOrderByWinner (FILE* dataFile, winnerIndex *index, primaryIndex *primaryArray, winnerIndex element, int size) {
+	int primaryPosition, winnerPosition;
+	lolMatch match;
+
+	winnerPosition = binarySearch (index, &element, 0, size - 1, sizeof(winnerIndex), compareWinner);
+ 	primaryPosition = binarySearch (primaryArray, &index[0], 0, size - 1, sizeof(primaryIndex), compareKeyWithWinner);
+
+ 	if (primaryPosition != -1) { 
+ 		fseek (dataFile, primaryArray[primaryPosition].offset, SEEK_SET);
+ 		fscanf (dataFile, "%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@", 
+ 				match.primaryKey, match.blueTeam, match.redTeam, match.date,
+ 				match.matchDuration, match.winnerTeam, match.blueTeamScore,
+ 				match.redTeamScore, match.mvpNickname);
+
+ 		printf("%s\n", match.primaryKey);
+ 		printf("%s\n", match.blueTeam);
+ 		printf("%s\n", match.redTeam);
+ 		printf("%s\n", match.date);
+ 		printf("%s\n", match.matchDuration);
+ 		printf("%s\n", match.winnerTeam);
+ 		printf("%s\n", match.blueTeamScore);
+ 		printf("%s\n", match.redTeamScore);
+ 		printf("%s\n", match.mvpNickname);
+ 		printf("\n");
+ 	} else { 
+ 		printf("Registro não encontrado!\n");
+ 	}	
+}
+
+void searchMatchesOrderByMVP (FILE* dataFile, mvpIndex *index, primaryIndex *primaryArray, mvpIndex element, int size) {
+	
+}
+
+void listMatches (FILE* dataFile, primaryIndex *pIndex, winnerIndex *wIndex, mvpIndex *mIndex, int size) { 
+	char menuOption;
+	printListOptions();
+	scanf(" %c", &menuOption);
+	switch(menuOption) { 
+		case '1':
+			printMatchesOrderByPrimaryKey (dataFile, pIndex, size);
+			break;
+		case '2':
+			printMatchesOrderByWinner (dataFile, wIndex,  pIndex, size);
+			break;
+		case '3':
+			printMatchesOrderByMVP (dataFile, mIndex, pIndex, size);
+			break;
+		default:
+			break;
+	}
+}
+
+void searchMatches (FILE* dataFile, primaryIndex *pIndex, winnerIndex *wIndex, mvpIndex *mIndex, int size) { 
+	char menuOption;
+	char search[40];
+	primaryIndex pElement;
+	winnerIndex wElement;
+	mvpIndex mElement;
+
+	printListOptions();
+	scanf(" %c\n", &menuOption);
+	switch(menuOption) { 
+		case '1':
+			scanf("%[^\n]", search);
+			strcpy (pElement.primaryKey, search);
+			searchMatchesOrderByPrimaryKey (dataFile, pIndex, pElement, size);
+			break;
+		case '2':
+			scanf("%[^\n]", search);
+			strcpy (wElement.winner, search);
+			searchMatchesOrderByWinner (dataFile, wIndex, pIndex, wElement, size);
+			break;
+		case '3':
+			scanf("%[^\n]", search);
+			strcpy (mElement.primaryKey, search);
+			searchMatchesOrderByMVP (dataFile, mIndex, pIndex, mElement, size);
+			break;
+		default:
+			break;
+	}
 }
 
 void freeSpace (FILE** dataFile, primaryIndex **primaryIndex, winnerIndex **winnerIndex, mvpIndex **mvpIndex) {
@@ -183,4 +392,20 @@ void freeSpace (FILE** dataFile, primaryIndex **primaryIndex, winnerIndex **winn
 
 void updateIndexes (primaryIndex *primaryIndex, winnerIndex *winnerIndex, mvpIndex *mvpIndex) {
 
+}
+
+void printOptions()	{ 
+	printf("1. Cadastrar.\n");
+	printf("2. Alteração.\n");
+	printf("3. Remoção.\n");
+	printf("4. Busca.\n");
+	printf("5. Listagem.\n");
+	printf("6. Liberar Espaço.\n");
+	printf("7. Finalizar.\n");
+}
+
+void printListOptions() {
+	printf("1. por código:\n");
+	printf("2. por nome da equipe vencedora:\n");
+	printf("3. por apelido do MVP:\n");
 }

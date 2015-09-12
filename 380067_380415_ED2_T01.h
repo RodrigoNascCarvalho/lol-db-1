@@ -51,15 +51,17 @@ void saveWinnerIndex (FILE *file, winnerIndex *winnerIndexArray, int size);
 
 void saveMVPIndex (FILE *file, mvpIndex *mvpIndexArray, int size);
 
-void createIndexes (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryIndexArray, 
+int createIndexes (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryIndexArray, 
 					FILE* winnerFile, winnerIndex *winnerIndexArray, 
 					FILE* mvpFile, mvpIndex *mvpIndexArray);
 
 int checkIndexConsistency (FILE* primaryFile);
 
-void loadIndexes (FILE* primaryFile, primaryIndex *primaryIndexArray, 
+int loadIndexes (FILE* primaryFile, primaryIndex *primaryIndexArray, 
 						FILE* winnerFile, winnerIndex *winnerIndexArray, 
 						FILE* mvpFile, mvpIndex *mvpIndexArray);
+
+int binarySearch (void* array, void* key, int start, int end, size_t size, int (*compare)(const void*, const void*));
 
 void insertMatch (FILE* dataFile, lolMatch match);
 
@@ -67,14 +69,28 @@ lolMatch searchMatch (FILE* dataFile, char* query, int searchOption);
 
 void removeMatch (FILE* dataFile, char* primaryKey);
 
-void printMatchesOrderByPrimaryKey (FILE* dataFile, primaryIndex **index, int searchOption);
+void printMatchesOrderByPrimaryKey (FILE* dataFile, primaryIndex *index, int size);
 
-void printMatchesOrderByWinner (FILE* dataFile, winnerIndex **index, int searchOption);
+void printMatchesOrderByWinner (FILE* dataFile, winnerIndex *index, primaryIndex *primaryArray, int size);
 
-void printMatchesOrderByMVP (FILE* dataFile, mvpIndex **index, int searchOption);
+void printMatchesOrderByMVP (FILE* dataFile, mvpIndex *index, primaryIndex *primaryArray, int size);
+
+void searchMatchesOrderByPrimaryKey (FILE* dataFile, primaryIndex *index, primaryIndex element, int size);
+
+void searchMatchesOrderByWinner (FILE* dataFile, winnerIndex *index, primaryIndex *primaryArray, winnerIndex element, int size);
+
+void searchMatchesOrderByMVP (FILE* dataFile, mvpIndex *index, primaryIndex *primaryArray, mvpIndex element, int size);
+
+void listMatches (FILE* dataFile, primaryIndex *pIndex, winnerIndex *wIndex, mvpIndex *mIndex, int size);
+
+void searchMatches (FILE* dataFile, primaryIndex *pIndex, winnerIndex *wIndex, mvpIndex *mIndex, int size);
 
 void freeSpace (FILE** dataFile, primaryIndex **primaryIndex, winnerIndex **winnerIndex, mvpIndex **mvpIndex);
 
 void updateIndexes (primaryIndex *primaryIndex, winnerIndex *winnerIndex, mvpIndex *mvpIndex);
+
+void printOptions(void);
+
+void printListOptions(void);
 
 #endif
