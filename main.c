@@ -58,7 +58,7 @@ int main (int argc, char *argv[]) {
 
 		switch(menuOption) {
 			case '1':
-				/*TODO Insert*/
+				
 				break;
 			case '2':
 				/*TODO Update*/
@@ -78,19 +78,19 @@ int main (int argc, char *argv[]) {
 			case '7':
 				/*TODO Finish*/
 				runningProgram = 0;
+
+				free(primaryIndexArray);
+				free(winnerIndexArray);
+				free(mvpIndexArray);
+				fclose(matchFile);
+				fclose(primaryIndexFile);
+				fclose(mvpIndexFile);
+				fclose(winnerIndexFile);
 				break;
 			default:
 				break;
 		}
 	}
-
-	free(primaryIndexArray);
-	free(winnerIndexArray);
-	free(mvpIndexArray);
-	fclose(matchFile);
-	fclose(primaryIndexFile);
-	fclose(mvpIndexFile);
-	fclose(winnerIndexFile);
 
 	return 0;
 }

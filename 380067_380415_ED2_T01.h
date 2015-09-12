@@ -69,6 +69,8 @@ lolMatch searchMatch (FILE* dataFile, char* query, int searchOption);
 
 void removeMatch (FILE* dataFile, char* primaryKey);
 
+void printMatch (FILE *dataFile, primaryIndex *index, int primaryPosition);
+
 void printMatchesOrderByPrimaryKey (FILE* dataFile, primaryIndex *index, int size);
 
 void printMatchesOrderByWinner (FILE* dataFile, winnerIndex *index, primaryIndex *primaryArray, int size);
