@@ -139,6 +139,10 @@ int binarySearchAll (void* array, void* key, int start, int end, int *result, si
 
 void savePrimaryIndex (FILE *file, primaryIndex *primaryIndexArray, int size) {
 	int i;
+
+	fclose (file);
+	file = fopen ("iprimary.idx", "w+");
+
 	fprintf(file, "%d\n", 1);
 	for (i = 0; i < size; i += 1) {
 		fprintf(file, "%s@%d@\n", primaryIndexArray[i].primaryKey, primaryIndexArray[i].offset);
@@ -147,6 +151,10 @@ void savePrimaryIndex (FILE *file, primaryIndex *primaryIndexArray, int size) {
 
 void saveWinnerIndex (FILE *file, winnerIndex *winnerIndexArray, int size) {
 	int i;
+
+	fclose (file);
+	file = fopen ("iwinner.idx", "w+");
+
 	for (i = 0; i < size; i += 1) {
 		fprintf(file, "%s@%s@\n", winnerIndexArray[i].winner ,winnerIndexArray[i].primaryKey);
 	}
@@ -154,6 +162,10 @@ void saveWinnerIndex (FILE *file, winnerIndex *winnerIndexArray, int size) {
 
 void saveMVPIndex (FILE *file, mvpIndex *mvpIndexArray, int size) {
 	int i;
+
+	fclose (file);
+	file = fopen ("imvp.idx", "w+");
+
 	for (i = 0; i < size; i += 1) {
 		fprintf(file, "%s@%s@\n", mvpIndexArray[i].mvpNickname , mvpIndexArray[i].primaryKey);
 	}
@@ -162,7 +174,6 @@ void saveMVPIndex (FILE *file, mvpIndex *mvpIndexArray, int size) {
 int loadPrimaryIndex (FILE *file, primaryIndex *primaryIndexArray) {
 	int i = 0;
 	while (fscanf (file, "%[^@]@%d@\n", primaryIndexArray[i].primaryKey, &primaryIndexArray[i].offset) == 2) {
-		primaryIndexArray[i].isNewElement = 0;
 		i++;
 	}
 	return i;
@@ -171,7 +182,6 @@ int loadPrimaryIndex (FILE *file, primaryIndex *primaryIndexArray) {
 void loadWinnerIndex (FILE *file, winnerIndex *winnerIndexArray) {
 	int i = 0;
 	while (fscanf (file, "%[^@]@%[^@]@\n", winnerIndexArray[i].winner ,winnerIndexArray[i].primaryKey) == 2) {
-		winnerIndexArray[i].isNewElement = 0;
 		i++;
 	}
 }
@@ -179,7 +189,6 @@ void loadWinnerIndex (FILE *file, winnerIndex *winnerIndexArray) {
 void loadMVPIndex (FILE *file, mvpIndex *mvpIndexArray) {
 	int i = 0;
 	while (fscanf (file, "%[^@]@%[^@]@\n", mvpIndexArray[i].mvpNickname , mvpIndexArray[i].primaryKey) == 2) {
-		mvpIndexArray[i].isNewElement = 0;
 		i++;
 	}
 }
@@ -198,34 +207,6 @@ void saveIndexFiles (FILE * primaryFile, FILE* winnerFile, FILE* mvpFile,
 	persistFile (primaryFile, "iprimary.idx");
 	persistFile (winnerFile, "iwinner.idx");
 	persistFile (mvpFile, "imvp.idx");
-
-	setIndexConsistency (primaryFile, 1);
-}
-
-void updateIndexFiles (FILE * primaryFile, FILE* winnerFile, FILE* mvpFile, 
-						primaryIndex* primaryArray, winnerIndex* winnerArray, mvpIndex* mvpArray, int size) {
-	int i;
-	
-	fseek (primaryFile, 0, SEEK_END);
-	for (i = 0; i < size; i += 1) {
-		if (primaryArray[i].isNewElement) {
-			fprintf(primaryFile, "%s@%d@\n", primaryArray[i].primaryKey, primaryArray[i].offset);
-		}
-	}
-
-	fseek (winnerFile, 0, SEEK_END);
-	for (i = 0; i < size; i += 1) {
-		if (winnerArray[i].isNewElement) {
-			fprintf(winnerFile, "%s@%s@\n", winnerArray[i].winner, winnerArray[i].primaryKey);
-		}
-	}
-
-	fseek (mvpFile, 0, SEEK_END);
-	for (i = 0; i < size; i += 1) {
-		if (mvpArray[i].isNewElement) {
-			fprintf(mvpFile, "%s@%s@\n", mvpArray[i].mvpNickname, mvpArray[i].primaryKey);	
-		}
-	}
 
 	setIndexConsistency (primaryFile, 1);
 }
@@ -250,11 +231,11 @@ int createIndexes (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryIndex
 		strcpy (winnerIndexArray[i].primaryKey, primaryIndexArray[i].primaryKey);
 		strcpy (mvpIndexArray[i].primaryKey, primaryIndexArray[i].primaryKey);
 
-		primaryIndexArray[i].isNewElement = 0;
-		winnerIndexArray[i].isNewElement = 0;
-		mvpIndexArray[i].isNewElement = 0;
-
-		primaryIndexArray[i].offset = REG_SIZE * i;
+		if (strstr (primaryIndexArray[i].primaryKey, "*|") == NULL) {
+			primaryIndexArray[i].offset = REG_SIZE * i;
+		} else {
+			primaryIndexArray[i].offset = -1;
+		}
 	}
 
 	sortIndexes (primaryIndexArray, winnerIndexArray, mvpIndexArray, registerCount);
@@ -468,15 +449,12 @@ int insertMatch (FILE *dataFile, FILE *primaryFile, FILE *winnerFile, FILE *mvpF
 
 	strcpy (primaryArray[size].primaryKey, element.primaryKey);
 	primaryArray[size].offset = size * REG_SIZE;
-	primaryArray[size].isNewElement = 1;
 
 	strcpy (winnerArray[size].primaryKey, element.primaryKey);
 	strcpy (winnerArray[size].winner, element.winnerTeam);
-	winnerArray[size].isNewElement = 1;
 
 	strcpy (mvpArray[size].primaryKey, element.primaryKey);
 	strcpy (mvpArray[size].mvpNickname, element.mvpNickname);
-	mvpArray[size].isNewElement = 1;
 
 	size += 1;
 
@@ -488,10 +466,11 @@ int insertMatch (FILE *dataFile, FILE *primaryFile, FILE *winnerFile, FILE *mvpF
 int addMatch (FILE *dataFile, FILE *primaryFile, FILE *winnerFile, FILE *mvpFile,
 				primaryIndex* primaryArray, winnerIndex* winnerArray, mvpIndex* mvpArray, int size) {
 	lolMatch element;
+	int primaryPosition;
 
 	readMatch (&element);
-
-	if (binarySearch (primaryArray, &element, 0, size - 1, sizeof(primaryIndex), compareKeyWithMatch) != -1) {
+	primaryPosition = binarySearch (primaryArray, &element, 0, size - 1, sizeof(primaryIndex), compareKeyWithMatch);
+	if (primaryPosition != -1 && primaryArray[primaryPosition].offset != -1) {
 		printf ("ERRO: Já existe um registro com a chave primária: %s.\n", element.primaryKey);
 	} else {
 		setIndexConsistency (primaryFile, 0);
@@ -502,8 +481,30 @@ int addMatch (FILE *dataFile, FILE *primaryFile, FILE *winnerFile, FILE *mvpFile
 	return size;
 }
 
-void removeMatch (FILE* dataFile, char* primaryKey) {
+void removeMatch (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryArray, int size) {
+	primaryIndex match;
+	int primaryPosition;
 
+	scanf (" %[^\n]", match.primaryKey);
+	primaryPosition = binarySearch (primaryArray, &match, 0, size - 1, sizeof (primaryIndex), compareKeys);
+	if (primaryPosition != -1  && primaryArray[primaryPosition].offset != -1) {
+		setIndexConsistency (primaryFile, 0);
+
+		fseek (dataFile, primaryArray[primaryPosition].offset, SEEK_SET);
+		fprintf (dataFile, "*|");
+			
+		persistFile (dataFile, "matches.dat");
+
+		/*
+			Guarantees that if the user adds exactly the same register again,
+			we don't need to modify the way the program searches for the registers.
+		*/
+		primaryArray[primaryPosition].primaryKey[0] = '*';
+		primaryArray[primaryPosition].primaryKey[1] = '|';
+		primaryArray[primaryPosition].offset = -1;
+	} else {
+		printf ("Registro não encontrado!\n");
+	}
 }
 
 void printSearchMatch (FILE *dataFile, primaryIndex *index, int primaryPosition) {
@@ -520,8 +521,10 @@ void printSearchMatch (FILE *dataFile, primaryIndex *index, int primaryPosition)
 void printMatchesOrderByPrimaryKey (FILE* dataFile, primaryIndex *index, int size) {
 	int i;
 
-	for (i = 0; i < size; i += 1) { 
-		printSearchMatch (dataFile, index, i);	
+	for (i = 0; i < size; i += 1) {
+		if (index[i].offset != -1) {
+			printSearchMatch (dataFile, index, i);	
+		}
 	}
 }
 
@@ -532,7 +535,7 @@ void printMatchesOrderByWinner (FILE* dataFile, winnerIndex *index, primaryIndex
 	for (i = 0; i < size; i += 1) {
 		strcpy (element.primaryKey, index[i].primaryKey);
 		primaryPosition = binarySearch (primaryArray, &element, 0, size - 1, sizeof(primaryIndex), compareKeys);
-		if (primaryPosition != -1) {
+		if (primaryPosition != -1 && primaryArray[primaryPosition].offset != -1) {
 			printSearchMatch (dataFile, primaryArray, primaryPosition);
 		}
 	}
@@ -545,7 +548,7 @@ void printMatchesOrderByMVP (FILE* dataFile, mvpIndex *index, primaryIndex *prim
 	for (i = 0; i < size; i += 1) {
 		strcpy (element.primaryKey, index[i].primaryKey);
 		primaryPosition = binarySearch (primaryArray, &element, 0, size - 1, sizeof(primaryIndex), compareKeys);
-		if (primaryPosition != -1) {
+		if (primaryPosition != -1 && primaryArray[primaryPosition].offset != -1) {
 			printSearchMatch (dataFile, primaryArray, primaryPosition);
 		}
 	}
@@ -556,7 +559,7 @@ void searchMatchesOrderByPrimaryKey (FILE* dataFile, primaryIndex *index, primar
 
 	primaryPosition = binarySearch (index, &element, 0, size - 1, sizeof(primaryIndex), compareKeys);
  	
- 	if (primaryPosition != -1) { 
+ 	if (primaryPosition != -1 && index[primaryPosition].offset != -1) { 
  		printSearchMatch (dataFile, index, primaryPosition);
  	} else { 
  		printf("Registro não encontrado!\n");
@@ -576,7 +579,7 @@ void searchMatchesOrderByWinner (FILE* dataFile, winnerIndex *index, primaryInde
 		for (i = 0; i < resultSize; i++) { 
 			primaryPosition = binarySearch (primaryArray, &index[result[i]], 0, size - 1, sizeof(primaryIndex), compareKeyWithWinner);
 
-			if (primaryPosition != -1) {
+			if (primaryPosition != -1 && primaryArray[primaryPosition].offset != -1) {
 				printSearchMatch (dataFile, primaryArray, primaryPosition);
 			} else {
 				printf("Registro não encontrado!\n");
@@ -600,7 +603,7 @@ void searchMatchesOrderByMVP (FILE* dataFile, mvpIndex *index, primaryIndex *pri
 		for (i = 0; i < resultSize; i++) { 
 			primaryPosition = binarySearch (primaryArray, &index[result[i]], 0, size - 1, sizeof(primaryIndex), compareKeyWithMVP);
 
-			if (primaryPosition != -1) {
+			if (primaryPosition != -1 && primaryArray[primaryPosition].offset != -1) {
 				printSearchMatch (dataFile, primaryArray, primaryPosition);
 			} else {
 				printf("Registro não encontrado!\n");
@@ -684,7 +687,7 @@ void updateMatch (FILE* dataFile, FILE* primaryFile, primaryIndex *pIndex, winne
 	winnerPosition = binarySearch (wIndex, &element, 0, size - 1, sizeof (winnerIndex), compareKeyWithWinner);
 	mvpPosition = binarySearch (mIndex, &element, 0, size - 1, sizeof (mvpIndex), compareKeyWithMVP);
 
-	if (primaryPosition != -1) {
+	if (primaryPosition != -1 && pIndex[primaryPosition].offset != -1) {
 		scanMatchDuration (matchDuration);
 
 		setIndexConsistency (primaryFile, 0);
@@ -705,7 +708,7 @@ void updateMatch (FILE* dataFile, FILE* primaryFile, primaryIndex *pIndex, winne
 
 		persistFile (dataFile, "matches.dat");
 	} else {
-		printf ("Registro não encontrado!");
+		printf ("Registro não encontrado!\n");
 	}
 }
 
@@ -723,4 +726,41 @@ void printListOptions() {
 	printf("1. por código:\n");
 	printf("2. por nome da equipe vencedora:\n");
 	printf("3. por apelido do MVP:\n");
+}
+
+int freeSpace (FILE *dataFile, FILE *primaryFile, FILE *winnerFile, FILE *mvpFile,
+				primaryIndex* primaryArray, winnerIndex* winnerArray, mvpIndex* mvpArray, int size) {
+	FILE *temporaryFile;
+	int i;
+	char primaryKey[9];
+	char reg_buffer[193];
+	if ((temporaryFile = fopen ("temporary.dat", "w+")) != NULL) {
+		for (i = 0; i < size; i++) {
+			fseek (dataFile, REG_SIZE * i, SEEK_SET);
+			fgets (reg_buffer, 193, dataFile);
+			sscanf (reg_buffer, "%[^@]", primaryKey);
+
+			if (strstr (primaryKey, "*|") == NULL) {
+				fprintf (temporaryFile, "%s", reg_buffer);
+			} else {
+				size--;
+			}
+		}
+	}	
+	fclose (dataFile);
+	fclose (temporaryFile);
+	rename ("temporary.dat", "matches.dat");
+	dataFile = fopen ("matches.dat", "r+");
+
+
+	free(primaryArray);
+	free(winnerArray);
+	free(mvpArray);
+
+	primaryArray = malloc (sizeof (primaryIndex) * MAX_SIZE);
+	winnerArray = malloc (sizeof (winnerIndex) * MAX_SIZE);
+	mvpArray = malloc (sizeof (mvpIndex) * MAX_SIZE);
+
+	createIndexes (dataFile, primaryFile, primaryArray, winnerFile, winnerArray, mvpFile, mvpArray);
+	return size;
 }

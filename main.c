@@ -65,7 +65,7 @@ int main (int argc, char *argv[]) {
 				updateMatch (matchFile, primaryIndexFile, primaryIndexArray, winnerIndexArray, mvpIndexArray, registerCount);
 				break;
 			case '3':
-				/*TODO Remove*/
+				removeMatch (matchFile, primaryIndexFile, primaryIndexArray, registerCount);
 				break;
 			case '4':
 				searchMatches (matchFile, primaryIndexArray, winnerIndexArray, mvpIndexArray, registerCount);
@@ -74,13 +74,13 @@ int main (int argc, char *argv[]) {
 				listMatches (matchFile, primaryIndexArray, winnerIndexArray, mvpIndexArray, registerCount);
 				break;
 			case '6':
-				/*TODO Free Space*/
+				registerCount = freeSpace (matchFile, primaryIndexFile, winnerIndexFile, mvpIndexFile,
+							primaryIndexArray, winnerIndexArray, mvpIndexArray, registerCount);
 				break;
 			case '7':
-				/*TODO Finish*/
 				runningProgram = 0;
 
-				updateIndexFiles (primaryIndexFile, winnerIndexFile, mvpIndexFile, primaryIndexArray, 
+				saveIndexFiles (primaryIndexFile, winnerIndexFile, mvpIndexFile, primaryIndexArray, 
 									winnerIndexArray, mvpIndexArray, registerCount);
 
 				free(primaryIndexArray);

@@ -19,19 +19,16 @@ typedef struct lolMatch {
 typedef struct primaryIndex {
 	char primaryKey[9];
 	int offset;
-	int isNewElement;
 } primaryIndex;
 
 typedef struct winnerIndex {
 	char winner[40];
 	char primaryKey[9];
-	int isNewElement;
 } winnerIndex;
 
 typedef struct mvpIndex {
 	char mvpNickname[40];
 	char primaryKey[9];
-	int isNewElement;
 } mvpIndex;
 
 FILE* fileExists (FILE *file, char* name);
@@ -120,7 +117,7 @@ int insertMatch (FILE *dataFile, FILE *primaryFile, FILE *winnerFile, FILE *mvpF
 int addMatch (FILE *dataFile, FILE *primaryFile, FILE *winnerFile, FILE *mvpFile,
 				primaryIndex* primaryArray, winnerIndex* winnerArray, mvpIndex* mvpArray, int size);
 
-void removeMatch (FILE* dataFile, char* primaryKey);
+void removeMatch (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryArray, int size);
 
 void printSearchMatch (FILE *dataFile, primaryIndex *index, int primaryPosition);
 
@@ -140,14 +137,13 @@ void listMatches (FILE* dataFile, primaryIndex *pIndex, winnerIndex *wIndex, mvp
 
 void searchMatches (FILE* dataFile, primaryIndex *pIndex, winnerIndex *wIndex, mvpIndex *mIndex, int size);
 
-void freeSpace (FILE** dataFile, primaryIndex **primaryIndex, winnerIndex **winnerIndex, mvpIndex **mvpIndex);
-
 void sortIndexes (primaryIndex *primaryArray, winnerIndex *winnerArray, mvpIndex *mvpArray, int registerCount);
-
-void updateMatch (FILE* dataFile, FILE* primaryFile, primaryIndex *pIndex, winnerIndex *wIndex, mvpIndex *mIndex, int size);
 
 void printOptions(void);
 
 void printListOptions(void);
+
+int freeSpace (FILE *dataFile, FILE *primaryFile, FILE *winnerFile, FILE *mvpFile,
+				primaryIndex* primaryArray, winnerIndex* winnerArray, mvpIndex* mvpArray, int size);
 
 #endif
