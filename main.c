@@ -11,7 +11,7 @@
 #include "380067_380415_ED2_T01.h"
 
 int main (int argc, char *argv[]) {
-	int runningProgram = 1, registerCount;
+	int runningProgram = 1, registerCount, matchFileExists = 1;
 	char menuOption;
 	FILE *matchFile, *primaryIndexFile, *winnerIndexFile, *mvpIndexFile;
 	primaryIndex *primaryIndexArray;
@@ -27,13 +27,14 @@ int main (int argc, char *argv[]) {
 	*/
 	if ((matchFile = fileExists(matchFile, "matches.dat")) == NULL) {
 		matchFile = createFile(matchFile, "matches.dat");
+		matchFileExists = 0;
 	}
 
 	primaryIndexFile = fileExists(primaryIndexFile, "iprimary.idx");
 	winnerIndexFile = fileExists(winnerIndexFile, "iwinner.idx");
 	mvpIndexFile = fileExists(mvpIndexFile, "imvp.idx");
 
-	if (primaryIndexFile && winnerIndexFile && mvpIndexFile) {
+	if (primaryIndexFile && winnerIndexFile && mvpIndexFile && matchFileExists ) {
 		if (checkIndexConsistency(primaryIndexFile)) {
 			registerCount = loadIndexes (primaryIndexFile, primaryIndexArray, 
 							winnerIndexFile, winnerIndexArray, mvpIndexFile, mvpIndexArray);
@@ -53,7 +54,7 @@ int main (int argc, char *argv[]) {
 	}
 
 	while (runningProgram) {
-		printOptions();
+		/*printOptions();*/
 		scanf(" %c", &menuOption);
 
 		switch(menuOption) {

@@ -297,7 +297,7 @@ void scanScore (char *score) {
 	char invalidData;
 	char digitFormatter[3];
 	while (scanf (" %2[-0123456789][^\n]", score) == 0) {
-		printf ("Campo inválido! Informe novamente:");
+		printf ("Campo inválido! Informe novamente: ");
 		while (invalidData = getchar() != '\n' && invalidData != EOF);
 	}
 	if (strlen (score) == 1) {
@@ -314,7 +314,7 @@ void scanWinnerTeam (lolMatch *element) {
 	scanf (" %[^\n]", winnerTeam);
 
 	if (strlen (winnerTeam) > 39) {
-		printf("Campo inválido! Informe novamente:");
+		printf("Campo inválido! Informe novamente: ");
 		scanWinnerTeam (element);
 	} else {
 		strcpy (element->winnerTeam, winnerTeam);
@@ -323,7 +323,7 @@ void scanWinnerTeam (lolMatch *element) {
 	isEqualToBlue = strcmp (element->winnerTeam, element->blueTeam);
 	isEqualToRed = strcmp (element->winnerTeam, element->redTeam);
 	if (isEqualToRed != 0 && isEqualToBlue != 0) {
-		printf("Campo inválido! Informe novamente:");
+		printf("Campo inválido! Informe novamente: ");
 		scanWinnerTeam (element);
 	}
 }
@@ -334,7 +334,7 @@ void scanBlueTeam (lolMatch *element) {
 
 	if (strlen (blueTeam) > 39) {
 		printf("%d", (int)strlen (blueTeam));
-		printf("Campo inválido! Informe novamente:");
+		printf("Campo inválido! Informe novamente: ");
 		scanBlueTeam (element);
 	} else {
 		strcpy (element->blueTeam, blueTeam);
@@ -346,7 +346,7 @@ void scanRedTeam (lolMatch *element) {
 	scanf (" %[^\n]", redTeam);
 
 	if (strlen (redTeam) > 39) {
-		printf("Campo inválido! Informe novamente:");
+		printf("Campo inválido! Informe novamente: ");
 		scanRedTeam (element);
 	} else {
 		strcpy (element->redTeam, redTeam);
@@ -358,7 +358,7 @@ void scanMVP (lolMatch *element) {
 	scanf (" %[^\n]", nickname);
 
 	if (strlen (nickname) > 39) {
-		printf("Campo inválido! Informe novamente:");
+		printf("Campo inválido! Informe novamente: ");
 		scanRedTeam (element);
 	} else {
 		strcpy (element->mvpNickname, nickname);
@@ -370,7 +370,7 @@ void scanTeams (lolMatch *element) {
 	scanRedTeam (element);
 
 	if (strcmp (element->blueTeam, element->redTeam) == 0) {
-		printf("Campo inválido! Informe novamente:");
+		printf("Campo inválido! Informe novamente: ");
 		scanTeams (element);
 	}
 }
@@ -383,20 +383,20 @@ void scanDate (lolMatch *element) {
 	
 	if (sscanf (date, "%2d/%2d/%4d", &day, &month, &year) == 3) {
 		if (day < 1 || day > 31) {
-			printf("Campo inválido! Informe novamente:");
+			printf("Campo inválido! Informe novamente: ");
 			scanDate (element);
 		}
 		if (month < 1 || month > 12) {
-			printf("Campo inválido! Informe novamente:");
+			printf("Campo inválido! Informe novamente: ");
 			scanDate (element);	
 		}
 		if (year < 2011 || year > 2015) {
-			printf("Campo inválido! Informe novamente:");
+			printf("Campo inválido! Informe novamente: ");
 			scanDate (element);	
 		}
 		strcpy (element->date, date);
 	} else {
-		printf("Campo inválido! Informe novamente:");
+		printf("Campo inválido! Informe novamente: ");
 		scanDate (element);
 	}
 }
@@ -410,7 +410,7 @@ void scanMatchDuration (char* element) {
 	if (sscanf (duration, "%2d:%2d", &hours, &minutes) == 2 && strlen (duration) == 5) {
 		strcpy (element, duration);
 	} else {
-		printf("Campo inválido! Inforne novamente:");
+		printf("Campo inválido! Informe novamente: ");
 		scanMatchDuration (element);
 	}
 }
@@ -616,7 +616,7 @@ void searchMatchesOrderByMVP (FILE* dataFile, mvpIndex *index, primaryIndex *pri
 
 void listMatches (FILE* dataFile, primaryIndex *pIndex, winnerIndex *wIndex, mvpIndex *mIndex, int size) { 
 	char menuOption;
-	printListOptions();
+	/*printListOptions();*/
 	scanf(" %c", &menuOption);
 	switch(menuOption) { 
 		case '1':
@@ -640,7 +640,7 @@ void searchMatches (FILE* dataFile, primaryIndex *pIndex, winnerIndex *wIndex, m
 	winnerIndex wElement;
 	mvpIndex mElement;
 
-	printListOptions();
+	/*printListOptions();*/
 	scanf(" %c\n", &menuOption);
 	switch(menuOption) { 
 		case '1':
