@@ -58,10 +58,11 @@ int main (int argc, char *argv[]) {
 
 		switch(menuOption) {
 			case '1':
-				
+				registerCount = addMatch (matchFile, primaryIndexFile, winnerIndexFile, mvpIndexFile,
+							primaryIndexArray, winnerIndexArray, mvpIndexArray, registerCount);
 				break;
 			case '2':
-				/*TODO Update*/
+				
 				break;
 			case '3':
 				/*TODO Remove*/
@@ -78,6 +79,9 @@ int main (int argc, char *argv[]) {
 			case '7':
 				/*TODO Finish*/
 				runningProgram = 0;
+
+				saveIndexFiles (primaryIndexFile, winnerIndexFile, mvpIndexFile, primaryIndexArray, 
+									winnerIndexArray, mvpIndexArray, registerCount);
 
 				free(primaryIndexArray);
 				free(winnerIndexArray);

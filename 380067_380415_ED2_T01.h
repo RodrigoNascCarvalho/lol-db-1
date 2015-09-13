@@ -57,19 +57,19 @@ int createIndexes (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryIndex
 
 int checkIndexConsistency (FILE* primaryFile);
 
+void setIndexConsistency (FILE* primaryFile, int isOk);
+
 int loadIndexes (FILE* primaryFile, primaryIndex *primaryIndexArray, 
 						FILE* winnerFile, winnerIndex *winnerIndexArray, 
 						FILE* mvpFile, mvpIndex *mvpIndexArray);
 
 int binarySearch (void* array, void* key, int start, int end, size_t size, int (*compare)(const void*, const void*));
 
-void insertMatch (FILE* dataFile, lolMatch match);
-
 lolMatch searchMatch (FILE* dataFile, char* query, int searchOption);
 
 void removeMatch (FILE* dataFile, char* primaryKey);
 
-void printMatch (FILE *dataFile, primaryIndex *index, int primaryPosition);
+void printSearchMatch (FILE *dataFile, primaryIndex *index, int primaryPosition);
 
 void printMatchesOrderByPrimaryKey (FILE* dataFile, primaryIndex *index, int size);
 
@@ -89,7 +89,10 @@ void searchMatches (FILE* dataFile, primaryIndex *pIndex, winnerIndex *wIndex, m
 
 void freeSpace (FILE** dataFile, primaryIndex **primaryIndex, winnerIndex **winnerIndex, mvpIndex **mvpIndex);
 
-void updateIndexes (primaryIndex *primaryIndex, winnerIndex *winnerIndex, mvpIndex *mvpIndex);
+void sortIndexes (primaryIndex *primaryArray, winnerIndex *winnerArray, mvpIndex *mvpArray, int registerCount);
+
+void saveIndexFiles (FILE * primaryFile, FILE* winnerFile, FILE* mvpFile, 
+						primaryIndex* primaryArray, winnerIndex* winnerArray, mvpIndex* mvpArray, int size);
 
 void printOptions(void);
 

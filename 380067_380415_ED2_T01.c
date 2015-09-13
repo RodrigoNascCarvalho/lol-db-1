@@ -29,6 +29,12 @@ int compareKeys (const void *a, const void *b) {
 	return strcmp (primary_a->primaryKey, primary_b->primaryKey);
 }
 
+int compareKeyWithMatch (const void *a, const void *b) {
+	const primaryIndex *primary_a = (primaryIndex*) a;
+	const lolMatch *match_b = (lolMatch*) b;
+	return strcmp (primary_a->primaryKey, match_b->primaryKey);
+}
+
 int compareKeyWithWinner (const void *a, const void *b) { 
 	const primaryIndex *primary_a = (primaryIndex*) a;
 	const winnerIndex *winner_b = (winnerIndex*) b;
@@ -175,6 +181,24 @@ void loadMVPIndex (FILE *file, mvpIndex *mvpIndexArray) {
 	}
 }
 
+void persistFile (FILE* file, char* name) {
+	fclose (file);
+	file = fopen (name, "r+");
+}
+
+void saveIndexFiles (FILE * primaryFile, FILE* winnerFile, FILE* mvpFile, 
+						primaryIndex* primaryArray, winnerIndex* winnerArray, mvpIndex* mvpArray, int size) {
+	savePrimaryIndex (primaryFile, primaryArray, size);
+	saveWinnerIndex (winnerFile, winnerArray, size);
+	saveMVPIndex (mvpFile, mvpArray, size);
+
+	persistFile (primaryFile, "iprimary.idx");
+	persistFile (winnerFile, "iwinner.idx");
+	persistFile (mvpFile, "imvp.idx");
+
+	setIndexConsistency (primaryFile, 1);
+}
+
 int createIndexes (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryIndexArray, 
 						FILE* winnerFile, winnerIndex *winnerIndexArray, 
 						FILE* mvpFile, mvpIndex *mvpIndexArray) {
@@ -197,33 +221,24 @@ int createIndexes (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryIndex
 
 		primaryIndexArray[i].offset = REG_SIZE * i;
 	}
-	/*
-		Sort primary index, save primary index
-	*/
-	qsort (primaryIndexArray, registerCount, sizeof(primaryIndex), compareKeys);
-	savePrimaryIndex (primaryFile, primaryIndexArray, registerCount);
 
-	/*
-		Sort winner index first by primary index, then by name, save primary index
-	*/
-	qsort (winnerIndexArray, registerCount, sizeof(winnerIndex), compareWinnerKeys);
-	qsort (winnerIndexArray, registerCount, sizeof(winnerIndex), compareWinner);
-	saveWinnerIndex (winnerFile, winnerIndexArray, registerCount);
+	sortIndexes (primaryIndexArray, winnerIndexArray, mvpIndexArray, registerCount);
 
-	/*
-		Sort mvp index first by primary index, then by name, save primary index
-	*/
-	qsort (mvpIndexArray, registerCount, sizeof(mvpIndex), compareMVPKeys);
-	qsort (mvpIndexArray, registerCount, sizeof(mvpIndex), compareMVP);
-	saveMVPIndex (mvpFile, mvpIndexArray, registerCount);
+	saveIndexFiles (primaryFile, winnerFile, mvpFile, primaryIndexArray, winnerIndexArray, mvpIndexArray, registerCount);
 
 	return registerCount;
 }
 
 int checkIndexConsistency (FILE* primaryFile) {
 	int isOk; 
-	fscanf(primaryFile, "%d\n", &isOk);
+	fscanf (primaryFile, "%d\n", &isOk);
 	return isOk;
+}
+
+void setIndexConsistency (FILE* primaryFile, int isOk) {
+	fseek (primaryFile, 0, SEEK_SET);
+	fprintf(primaryFile, "%d\n", isOk);
+	persistFile (primaryFile, "iprimary.idx");
 }
 
 int loadIndexes (FILE* primaryFile, primaryIndex *primaryIndexArray, 
@@ -237,22 +252,19 @@ int loadIndexes (FILE* primaryFile, primaryIndex *primaryIndexArray,
 }
 
 
-lolMatch searchMatch (FILE* dataFile, char* query, int searchOption) {
-
+void createPrimaryKey (lolMatch *element) {
+	element->primaryKey[0] = toupper (element->blueTeam[0]);
+	element->primaryKey[1] = toupper (element->redTeam[0]);
+	element->primaryKey[2] = toupper (element->mvpNickname[0]);
+	element->primaryKey[3] = toupper (element->mvpNickname[1]);
+	element->primaryKey[4] = element->date[0];
+	element->primaryKey[5] = element->date[1];
+	element->primaryKey[6] = element->date[3];
+	element->primaryKey[7] = element->date[4];
+	element->primaryKey[8] = '\0';
 }
 
-void removeMatch (FILE* dataFile, char* primaryKey) {
-
-}
-
-void printMatch (FILE *dataFile, primaryIndex *index, int primaryPosition) {
-	lolMatch match;
-	fseek (dataFile, index[primaryPosition].offset, SEEK_SET);
-	fscanf (dataFile, "%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@", 
-			match.primaryKey, match.blueTeam, match.redTeam, match.date,
-			match.matchDuration, match.winnerTeam, match.blueTeamScore,
-			match.redTeamScore, match.mvpNickname);
-
+void printMatch (lolMatch match) {
 	printf("%s\n", match.primaryKey);
 	printf("%s\n", match.blueTeam);
 	printf("%s\n", match.redTeam);
@@ -265,11 +277,217 @@ void printMatch (FILE *dataFile, primaryIndex *index, int primaryPosition) {
 	printf("\n");
 }
 
+void scanScore (char *score) {
+	char invalidData;
+	char digitFormatter[3];
+	while (scanf (" %2[-0123456789][^\n]", score) == 0) {
+		printf ("Campo inválido! Informe novamente:");
+		while (invalidData = getchar() != '\n' && invalidData != EOF);
+	}
+	if (strlen (score) == 1) {
+		strcpy (digitFormatter, "0");
+		strcat (digitFormatter, score);
+		strcpy (score, digitFormatter);
+	}
+	while (invalidData = getchar() != '\n' && invalidData != EOF);
+}
+
+void scanWinnerTeam (lolMatch *element) {
+	int isEqualToBlue, isEqualToRed;
+	char winnerTeam[200];
+	scanf (" %[^\n]", winnerTeam);
+
+	if (strlen (winnerTeam) > 39) {
+		printf("Campo inválido! Informe novamente:");
+		scanWinnerTeam (element);
+	} else {
+		strcpy (element->winnerTeam, winnerTeam);
+	}
+
+	isEqualToBlue = strcmp (element->winnerTeam, element->blueTeam);
+	isEqualToRed = strcmp (element->winnerTeam, element->redTeam);
+	if (isEqualToRed != 0 && isEqualToBlue != 0) {
+		printf("Campo inválido! Informe novamente:");
+		scanWinnerTeam (element);
+	}
+}
+
+void scanBlueTeam (lolMatch *element) {
+	char blueTeam[200];
+	scanf (" %[^\n]", blueTeam);
+
+	if (strlen (blueTeam) > 39) {
+		printf("%d", (int)strlen (blueTeam));
+		printf("Campo inválido! Informe novamente:");
+		scanBlueTeam (element);
+	} else {
+		strcpy (element->blueTeam, blueTeam);
+	}
+}
+
+void scanRedTeam (lolMatch *element) {
+	char redTeam[200];
+	scanf (" %[^\n]", redTeam);
+
+	if (strlen (redTeam) > 39) {
+		printf("Campo inválido! Informe novamente:");
+		scanRedTeam (element);
+	} else {
+		strcpy (element->redTeam, redTeam);
+	}
+}
+
+void scanMVP (lolMatch *element) {
+	char nickname[200];
+	scanf (" %[^\n]", nickname);
+
+	if (strlen (nickname) > 39) {
+		printf("Campo inválido! Informe novamente:");
+		scanRedTeam (element);
+	} else {
+		strcpy (element->mvpNickname, nickname);
+	}
+}
+
+void scanTeams (lolMatch *element) {
+	scanBlueTeam (element);
+	scanRedTeam (element);
+
+	if (strcmp (element->blueTeam, element->redTeam) == 0) {
+		printf("Campo inválido! Informe novamente:");
+		scanTeams (element);
+	}
+}
+
+void scanDate (lolMatch *element) {
+	char date[11];
+	int day, month, year;
+
+	scanf (" %[^\n]", date);
+	
+	if (sscanf (date, "%2d/%2d/%4d", &day, &month, &year) == 3) {
+		if (day < 1 || day > 31) {
+			printf("Campo inválido! Informe novamente:");
+			scanDate (element);
+		}
+		if (month < 1 || month > 12) {
+			printf("Campo inválido! Informe novamente:");
+			scanDate (element);	
+		}
+		if (year < 2011 || year > 2015) {
+			printf("Campo inválido! Informe novamente:");
+			scanDate (element);	
+		}
+		strcpy (element->date, date);
+	} else {
+		printf("Campo inválido! Informe novamente:");
+		scanDate (element);
+	}
+}
+
+void scanMatchDuration (lolMatch *element) {
+	char duration[100];
+	int hours, minutes;
+
+	scanf (" %[^\n]", duration);
+	
+	if (sscanf (duration, "%2d:%2d", &hours, &minutes) == 2 && strlen (duration) == 5) {
+		strcpy (element->matchDuration, duration);
+	} else {
+		printf("Campo inválido! Inforne novamente:");
+		scanMatchDuration (element);
+	}
+}
+
+void readMatch (lolMatch *element) {
+	scanTeams (element);
+	scanDate (element);
+	scanMatchDuration (element);
+	scanWinnerTeam (element);
+	scanScore (element->blueTeamScore);
+	scanScore (element->redTeamScore);
+	scanMVP (element);
+
+	createPrimaryKey (element);
+}
+
+int insertMatch (FILE *dataFile, FILE *primaryFile, FILE *winnerFile, FILE *mvpFile,
+				primaryIndex* primaryArray, winnerIndex* winnerArray, mvpIndex* mvpArray, int size, lolMatch element) {
+	char reg_match[REG_SIZE + 1];
+	int i;
+
+	snprintf (reg_match, 192, "%s@%s@%s@%s@%s@%s@%s@%s@%s@", element.primaryKey, element.blueTeam,
+				element.redTeam, element.date, element.matchDuration, element.winnerTeam,
+				element.blueTeamScore, element.redTeamScore, element.mvpNickname);
+	
+	for (i = (int) strlen(reg_match); i < REG_SIZE; i++) {
+		reg_match[i] = '#';
+	}
+	reg_match[REG_SIZE] = '\0';
+
+	fseek (dataFile, size * REG_SIZE, SEEK_SET);
+	fprintf (dataFile, "%s", reg_match);
+
+	persistFile (dataFile, "matches.dat");
+
+
+	strcpy (primaryArray[size].primaryKey, element.primaryKey);
+	primaryArray[size].offset = size * REG_SIZE;
+
+	strcpy (winnerArray[size].primaryKey, element.primaryKey);
+	strcpy (winnerArray[size].winner, element.winnerTeam);
+
+	strcpy (mvpArray[size].primaryKey, element.primaryKey);
+	strcpy (mvpArray[size].mvpNickname, element.mvpNickname);
+
+	size += 1;
+
+	sortIndexes (primaryArray, winnerArray, mvpArray, size);
+
+	return size;
+}
+
+int addMatch (FILE *dataFile, FILE *primaryFile, FILE *winnerFile, FILE *mvpFile,
+				primaryIndex* primaryArray, winnerIndex* winnerArray, mvpIndex* mvpArray, int size) {
+	lolMatch element;
+
+	readMatch (&element);
+
+	if (binarySearch (primaryArray, &element, 0, size - 1, sizeof(primaryIndex), compareKeyWithMatch) != -1) {
+		printf ("ERRO: Já existe um registro com a chave primária: %s.\n", element.primaryKey);
+	} else {
+		setIndexConsistency (primaryFile, 0);
+		size = insertMatch (dataFile, primaryFile, winnerFile, mvpFile,
+					primaryArray, winnerArray, mvpArray, size, element);
+	}
+
+	return size;
+}
+
+lolMatch searchMatch (FILE* dataFile, char* query, int searchOption) {
+
+}
+
+void removeMatch (FILE* dataFile, char* primaryKey) {
+
+}
+
+void printSearchMatch (FILE *dataFile, primaryIndex *index, int primaryPosition) {
+	lolMatch match;
+	fseek (dataFile, index[primaryPosition].offset, SEEK_SET);
+	fscanf (dataFile, "%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@", 
+			match.primaryKey, match.blueTeam, match.redTeam, match.date,
+			match.matchDuration, match.winnerTeam, match.blueTeamScore,
+			match.redTeamScore, match.mvpNickname);
+
+	printMatch (match);
+}
+
 void printMatchesOrderByPrimaryKey (FILE* dataFile, primaryIndex *index, int size) {
 	int i;
 
 	for (i = 0; i < size; i += 1) { 
-		printMatch (dataFile, index, i);	
+		printSearchMatch (dataFile, index, i);	
 	}
 }
 
@@ -281,7 +499,7 @@ void printMatchesOrderByWinner (FILE* dataFile, winnerIndex *index, primaryIndex
 		strcpy (element.primaryKey, index[i].primaryKey);
 		primaryPosition = binarySearch (primaryArray, &element, 0, size - 1, sizeof(primaryIndex), compareKeys);
 		if (primaryPosition != -1) {
-			printMatch (dataFile, primaryArray, primaryPosition);
+			printSearchMatch (dataFile, primaryArray, primaryPosition);
 		}
 	}
 }
@@ -294,7 +512,7 @@ void printMatchesOrderByMVP (FILE* dataFile, mvpIndex *index, primaryIndex *prim
 		strcpy (element.primaryKey, index[i].primaryKey);
 		primaryPosition = binarySearch (primaryArray, &element, 0, size - 1, sizeof(primaryIndex), compareKeys);
 		if (primaryPosition != -1) {
-			printMatch (dataFile, primaryArray, primaryPosition);
+			printSearchMatch (dataFile, primaryArray, primaryPosition);
 		}
 	}
 }
@@ -305,7 +523,7 @@ void searchMatchesOrderByPrimaryKey (FILE* dataFile, primaryIndex *index, primar
 	primaryPosition = binarySearch (index, &element, 0, size - 1, sizeof(primaryIndex), compareKeys);
  	
  	if (primaryPosition != -1) { 
- 		printMatch (dataFile, index, primaryPosition);
+ 		printSearchMatch (dataFile, index, primaryPosition);
  	} else { 
  		printf("Registro não encontrado!\n");
  	}
@@ -325,7 +543,7 @@ void searchMatchesOrderByWinner (FILE* dataFile, winnerIndex *index, primaryInde
 			primaryPosition = binarySearch (primaryArray, &index[result[i]], 0, size - 1, sizeof(primaryIndex), compareKeyWithWinner);
 
 			if (primaryPosition != -1) {
-				printMatch (dataFile, primaryArray, primaryPosition);
+				printSearchMatch (dataFile, primaryArray, primaryPosition);
 			} else {
 				printf("Registro não encontrado!\n");
 			}
@@ -349,7 +567,7 @@ void searchMatchesOrderByMVP (FILE* dataFile, mvpIndex *index, primaryIndex *pri
 			primaryPosition = binarySearch (primaryArray, &index[result[i]], 0, size - 1, sizeof(primaryIndex), compareKeyWithMVP);
 
 			if (primaryPosition != -1) {
-				printMatch (dataFile, primaryArray, primaryPosition);
+				printSearchMatch (dataFile, primaryArray, primaryPosition);
 			} else {
 				printf("Registro não encontrado!\n");
 			}
@@ -408,16 +626,19 @@ void searchMatches (FILE* dataFile, primaryIndex *pIndex, winnerIndex *wIndex, m
 	}
 }
 
-void insertMatch (FILE* dataFile, lolMatch match) {
-	
-}
-
 void freeSpace (FILE** dataFile, primaryIndex **primaryIndex, winnerIndex **winnerIndex, mvpIndex **mvpIndex) {
 
 }
 
-void updateIndexes (primaryIndex *primaryIndex, winnerIndex *winnerIndex, mvpIndex *mvpIndex) {
+void sortIndexes (primaryIndex *primaryArray, winnerIndex *winnerArray, mvpIndex *mvpArray, int registerCount) {
 
+	qsort (primaryArray, registerCount, sizeof(primaryIndex), compareKeys);
+
+	qsort (winnerArray, registerCount, sizeof(winnerIndex), compareWinnerKeys);
+	qsort (winnerArray, registerCount, sizeof(winnerIndex), compareWinner);
+
+	qsort (mvpArray, registerCount, sizeof(mvpIndex), compareMVPKeys);
+	qsort (mvpArray, registerCount, sizeof(mvpIndex), compareMVP);
 }
 
 void printOptions()	{ 
