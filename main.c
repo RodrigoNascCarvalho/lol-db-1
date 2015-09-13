@@ -62,7 +62,7 @@ int main (int argc, char *argv[]) {
 							primaryIndexArray, winnerIndexArray, mvpIndexArray, registerCount);
 				break;
 			case '2':
-				
+				updateMatch (matchFile, primaryIndexFile, primaryIndexArray, winnerIndexArray, mvpIndexArray, registerCount);
 				break;
 			case '3':
 				/*TODO Remove*/
@@ -80,7 +80,7 @@ int main (int argc, char *argv[]) {
 				/*TODO Finish*/
 				runningProgram = 0;
 
-				saveIndexFiles (primaryIndexFile, winnerIndexFile, mvpIndexFile, primaryIndexArray, 
+				updateIndexFiles (primaryIndexFile, winnerIndexFile, mvpIndexFile, primaryIndexArray, 
 									winnerIndexArray, mvpIndexArray, registerCount);
 
 				free(primaryIndexArray);

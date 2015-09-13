@@ -19,16 +19,19 @@ typedef struct lolMatch {
 typedef struct primaryIndex {
 	char primaryKey[9];
 	int offset;
+	int isNewElement;
 } primaryIndex;
 
 typedef struct winnerIndex {
 	char winner[40];
 	char primaryKey[9];
+	int isNewElement;
 } winnerIndex;
 
 typedef struct mvpIndex {
 	char mvpNickname[40];
 	char primaryKey[9];
+	int isNewElement;
 } mvpIndex;
 
 FILE* fileExists (FILE *file, char* name);
@@ -36,6 +39,12 @@ FILE* fileExists (FILE *file, char* name);
 FILE* createFile (FILE *file, char* name);
 
 int compareKeys (const void *a, const void *b);
+
+int compareKeyWithMatch (const void *a, const void *b);
+
+int compareKeyWithWinner (const void *a, const void *b);
+
+int compareKeyWithMVP (const void *a, const void *b);
 
 int compareWinnerKeys (const void *a, const void *b);
 
@@ -45,11 +54,31 @@ int compareMVPKeys (const void *a, const void *b);
 
 int compareMVP (const void *a, const void *b);
 
+int compareInt (const void *a, const void*b);
+
+int binarySearch (void* array, void* key, int start, int end, size_t size, int (*compare)(const void*, const void*));
+
+int binarySearchAll (void* array, void* key, int start, int end, int *result, size_t size, int (*compare)(const void*, const void*));
+
 void savePrimaryIndex (FILE *file, primaryIndex *primaryIndex, int size);
 
 void saveWinnerIndex (FILE *file, winnerIndex *winnerIndexArray, int size);
 
 void saveMVPIndex (FILE *file, mvpIndex *mvpIndexArray, int size);
+
+int loadPrimaryIndex (FILE *file, primaryIndex *primaryIndexArray);
+
+void loadWinnerIndex (FILE *file, winnerIndex *winnerIndexArray);
+
+void loadMVPIndex (FILE *file, mvpIndex *mvpIndexArray);
+
+void persistFile (FILE* file, char* name);
+
+void saveIndexFiles (FILE * primaryFile, FILE* winnerFile, FILE* mvpFile, 
+						primaryIndex* primaryArray, winnerIndex* winnerArray, mvpIndex* mvpArray, int size);
+
+void updateIndexFiles (FILE * primaryFile, FILE* winnerFile, FILE* mvpFile, 
+						primaryIndex* primaryArray, winnerIndex* winnerArray, mvpIndex* mvpArray, int size);
 
 int createIndexes (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryIndexArray, 
 					FILE* winnerFile, winnerIndex *winnerIndexArray, 
@@ -63,9 +92,33 @@ int loadIndexes (FILE* primaryFile, primaryIndex *primaryIndexArray,
 						FILE* winnerFile, winnerIndex *winnerIndexArray, 
 						FILE* mvpFile, mvpIndex *mvpIndexArray);
 
-int binarySearch (void* array, void* key, int start, int end, size_t size, int (*compare)(const void*, const void*));
+void createPrimaryKey (lolMatch *element);
 
-lolMatch searchMatch (FILE* dataFile, char* query, int searchOption);
+void printMatch (lolMatch match);
+
+void scanScore (char *score);
+
+void scanWinnerTeam (lolMatch *element);
+
+void scanBlueTeam (lolMatch *element);
+
+void scanRedTeam (lolMatch *element);
+
+void scanMVP (lolMatch *element);
+
+void scanTeams (lolMatch *element);
+
+void scanDate (lolMatch *element);
+
+void scanMatchDuration (char* element);
+
+void readMatch (lolMatch *element);
+
+int insertMatch (FILE *dataFile, FILE *primaryFile, FILE *winnerFile, FILE *mvpFile,
+				primaryIndex* primaryArray, winnerIndex* winnerArray, mvpIndex* mvpArray, int size, lolMatch element);
+
+int addMatch (FILE *dataFile, FILE *primaryFile, FILE *winnerFile, FILE *mvpFile,
+				primaryIndex* primaryArray, winnerIndex* winnerArray, mvpIndex* mvpArray, int size);
 
 void removeMatch (FILE* dataFile, char* primaryKey);
 
@@ -91,8 +144,7 @@ void freeSpace (FILE** dataFile, primaryIndex **primaryIndex, winnerIndex **winn
 
 void sortIndexes (primaryIndex *primaryArray, winnerIndex *winnerArray, mvpIndex *mvpArray, int registerCount);
 
-void saveIndexFiles (FILE * primaryFile, FILE* winnerFile, FILE* mvpFile, 
-						primaryIndex* primaryArray, winnerIndex* winnerArray, mvpIndex* mvpArray, int size);
+void updateMatch (FILE* dataFile, FILE* primaryFile, primaryIndex *pIndex, winnerIndex *wIndex, mvpIndex *mIndex, int size);
 
 void printOptions(void);
 
