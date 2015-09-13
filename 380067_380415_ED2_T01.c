@@ -56,7 +56,7 @@ int compareWinnerKeys (const void *a, const void *b) {
 int compareWinner (const void *a, const void *b) {
 	const winnerIndex *winner_a = (winnerIndex*) a;
 	const winnerIndex *winner_b = (winnerIndex*) b;
-	return strcmp (winner_a->winner, winner_b->winner);
+	return strcasecmp (winner_a->winner, winner_b->winner);
 }
 
 int compareMVPKeys (const void *a, const void *b) {
@@ -68,7 +68,7 @@ int compareMVPKeys (const void *a, const void *b) {
 int compareMVP (const void *a, const void *b) {
 	const mvpIndex *mvp_a = (mvpIndex*) a;
 	const mvpIndex *mvp_b = (mvpIndex*) b;
-	return strcmp (mvp_a->mvpNickname, mvp_b->mvpNickname);
+	return strcasecmp (mvp_a->mvpNickname, mvp_b->mvpNickname);
 }
 
 int compareInt (const void *a, const void*b) {
@@ -294,18 +294,14 @@ void printMatch (lolMatch match) {
 }
 
 void scanScore (char *score) {
-	char invalidData;
-	char digitFormatter[3];
-	while (scanf (" %2[-0123456789][^\n]", score) == 0) {
+	char buffer[10];
+
+	scanf (" %[^\n]", buffer);
+
+	if (sscanf (buffer, "%[-0123456789]", score) != 1 || strlen (buffer) != 2) {
 		printf ("Campo inválido! Informe novamente: ");
-		while (invalidData = getchar() != '\n' && invalidData != EOF);
+		scanScore (score);
 	}
-	if (strlen (score) == 1) {
-		strcpy (digitFormatter, "0");
-		strcat (digitFormatter, score);
-		strcpy (score, digitFormatter);
-	}
-	while (invalidData = getchar() != '\n' && invalidData != EOF);
 }
 
 void scanWinnerTeam (lolMatch *element) {
@@ -385,16 +381,15 @@ void scanDate (lolMatch *element) {
 		if (day < 1 || day > 31) {
 			printf("Campo inválido! Informe novamente: ");
 			scanDate (element);
-		}
-		if (month < 1 || month > 12) {
+		} else	if (month < 1 || month > 12) {
 			printf("Campo inválido! Informe novamente: ");
 			scanDate (element);	
-		}
-		if (year < 2011 || year > 2015) {
+		} else if (year < 2011 || year > 2015) {
 			printf("Campo inválido! Informe novamente: ");
 			scanDate (element);	
+		} else {
+			strcpy (element->date, date);	
 		}
-		strcpy (element->date, date);
 	} else {
 		printf("Campo inválido! Informe novamente: ");
 		scanDate (element);
@@ -481,7 +476,7 @@ int addMatch (FILE *dataFile, FILE *primaryFile, FILE *winnerFile, FILE *mvpFile
 	return size;
 }
 
-void removeMatch (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryArray, int size) {
+void removeMatch (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryArray, winnerIndex *winnerArray, mvpIndex *mvpArray, int size) {
 	primaryIndex match;
 	int primaryPosition;
 
@@ -502,6 +497,8 @@ void removeMatch (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryArray,
 		primaryArray[primaryPosition].primaryKey[0] = '*';
 		primaryArray[primaryPosition].primaryKey[1] = '|';
 		primaryArray[primaryPosition].offset = -1;
+
+		sortIndexes (primaryArray, winnerArray, mvpArray, size);
 	} else {
 		printf ("Registro não encontrado!\n");
 	}
@@ -742,8 +739,6 @@ int freeSpace (FILE *dataFile, FILE *primaryFile, FILE *winnerFile, FILE *mvpFil
 
 			if (strstr (primaryKey, "*|") == NULL) {
 				fprintf (temporaryFile, "%s", reg_buffer);
-			} else {
-				size--;
 			}
 		}
 	}	
@@ -761,6 +756,6 @@ int freeSpace (FILE *dataFile, FILE *primaryFile, FILE *winnerFile, FILE *mvpFil
 	winnerArray = malloc (sizeof (winnerIndex) * MAX_SIZE);
 	mvpArray = malloc (sizeof (mvpIndex) * MAX_SIZE);
 
-	createIndexes (dataFile, primaryFile, primaryArray, winnerFile, winnerArray, mvpFile, mvpArray);
+	size = createIndexes (dataFile, primaryFile, primaryArray, winnerFile, winnerArray, mvpFile, mvpArray);
 	return size;
 }

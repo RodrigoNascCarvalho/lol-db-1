@@ -66,7 +66,7 @@ int main (int argc, char *argv[]) {
 				updateMatch (matchFile, primaryIndexFile, primaryIndexArray, winnerIndexArray, mvpIndexArray, registerCount);
 				break;
 			case '3':
-				removeMatch (matchFile, primaryIndexFile, primaryIndexArray, registerCount);
+				removeMatch (matchFile, primaryIndexFile, primaryIndexArray, winnerIndexArray, mvpIndexArray, registerCount);
 				break;
 			case '4':
 				searchMatches (matchFile, primaryIndexArray, winnerIndexArray, mvpIndexArray, registerCount);

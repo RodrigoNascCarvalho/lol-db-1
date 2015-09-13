@@ -117,7 +117,7 @@ int insertMatch (FILE *dataFile, FILE *primaryFile, FILE *winnerFile, FILE *mvpF
 int addMatch (FILE *dataFile, FILE *primaryFile, FILE *winnerFile, FILE *mvpFile,
 				primaryIndex* primaryArray, winnerIndex* winnerArray, mvpIndex* mvpArray, int size);
 
-void removeMatch (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryArray, int size);
+void removeMatch (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryArray, winnerIndex *winnerArray, mvpIndex *mvpArray, int size);
 
 void printSearchMatch (FILE *dataFile, primaryIndex *index, int primaryPosition);
 
