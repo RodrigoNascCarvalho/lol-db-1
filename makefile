@@ -6,7 +6,7 @@ CFLAGS = -ansi
 default: sistema
 
 sistema: $(TARGET).o $(DEPENDENCY).o
-	$(CC) $(CFLAGS) -o program $(DEPENDENCY).o $(TARGET).o
+	$(CC) $(CFLAGS) -o sistema $(DEPENDENCY).o $(TARGET).o
 
 $(TARGET).o: $(TARGET).c
 	$(CC) $(CFLAGS) -c $(TARGET).c
