@@ -15,4 +15,7 @@ $(DEPENDENCY).o: $(DEPENDENCY).c $(DEPENDENCY).h
 	$(CC) $(CFLAGS) -c $(DEPENDENCY).c
 
 clean:
-	$(RM) sistema *.o *~
+	$(RM) *.o *~
+
+uninstall:
+	$(RM) *.o *.idx *.dat sistema *.txt *.out *.in *~
