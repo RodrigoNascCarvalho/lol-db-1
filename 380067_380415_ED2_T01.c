@@ -10,6 +10,10 @@
 #include <string.h>
 #include "380067_380415_ED2_T01.h"
 
+
+/*
+	A simple function to check if a file exists, if the file exists then it returns the file in r+ mode.
+*/
 FILE* fileExists (FILE *file, char* name) {
 	if ((file = fopen (name, "r+")) != NULL) {
 		return file;
@@ -18,59 +22,95 @@ FILE* fileExists (FILE *file, char* name) {
 	}
 }
 
+/*
+	A simple function to create a file and return it, it creates the file in w+ mode.
+*/
 FILE* createFile (FILE *file, char* name) {
 	file = fopen (name, "w+");
 	return file;
 }
 
+/*
+	From this point on, all of the comparators are defined, comparators are used in the binarySearch generic functions.
+	Their purpose is to avoid rewriting the binary search functions.
+	The comparators are also used for the quick sort calls.
+*/
+
+/*
+	Compares primary keys from the primaryIndex.
+*/
 int compareKeys (const void *a, const void *b) {
 	const primaryIndex *primary_a = (primaryIndex*) a;
 	const primaryIndex *primary_b = (primaryIndex*) b;
 	return strcmp (primary_a->primaryKey, primary_b->primaryKey);
 }
 
+/*
+	Compares a primaryIndex key with a match structure key.
+*/
 int compareKeyWithMatch (const void *a, const void *b) {
 	const primaryIndex *primary_a = (primaryIndex*) a;
 	const lolMatch *match_b = (lolMatch*) b;
 	return strcmp (primary_a->primaryKey, match_b->primaryKey);
 }
 
+/*
+	Compares a primaryIndex key with a winnerIndex key.
+*/
 int compareKeyWithWinner (const void *a, const void *b) { 
 	const primaryIndex *primary_a = (primaryIndex*) a;
 	const winnerIndex *winner_b = (winnerIndex*) b;
 	return strcmp (primary_a->primaryKey, winner_b->primaryKey);	
 }
 
+/*
+	Compares a primaryIndex key with a MVPIndex key.
+*/
 int compareKeyWithMVP (const void *a, const void *b) {
 	const primaryIndex *primary_a = (primaryIndex*) a;
 	const mvpIndex *mvp_b = (mvpIndex*) b;
 	return strcmp (primary_a->primaryKey, mvp_b->primaryKey);	
 }
 
+/*
+	Compares just winnerIndex keys.
+*/
 int compareWinnerKeys (const void *a, const void *b) {
 	const winnerIndex *winner_a = (winnerIndex*) a;
 	const winnerIndex *winner_b = (winnerIndex*) b;
 	return strcmp (winner_a->primaryKey, winner_b->primaryKey);
 }
 
+/*
+	Compares just winnerIndex winners.
+*/
 int compareWinner (const void *a, const void *b) {
 	const winnerIndex *winner_a = (winnerIndex*) a;
 	const winnerIndex *winner_b = (winnerIndex*) b;
 	return strcasecmp (winner_a->winner, winner_b->winner);
 }
 
+/*
+	Compares just MVPIndex primary keys.
+*/
 int compareMVPKeys (const void *a, const void *b) {
 	const mvpIndex *mvp_a = (mvpIndex*) a;
 	const mvpIndex *mvp_b = (mvpIndex*) b;
 	return strcmp (mvp_a->primaryKey, mvp_b->primaryKey);
 }
 
+/*
+	Compares just MVPIndex mvpNicknames.
+*/
 int compareMVP (const void *a, const void *b) {
 	const mvpIndex *mvp_a = (mvpIndex*) a;
 	const mvpIndex *mvp_b = (mvpIndex*) b;
 	return strcasecmp (mvp_a->mvpNickname, mvp_b->mvpNickname);
 }
 
+/*
+	Compares ints.
+*/
 int compareInt (const void *a, const void*b) {
 	const int *n_a = (int*) a;
 	const int *n_b = (int*) b;
@@ -78,7 +118,12 @@ int compareInt (const void *a, const void*b) {
 }
 
 /*
-	Generic binarySearch, hopefully reusable for the future =D 
+	Generic binary search function, based on the prototype of the qsort stantard C function. 
+	Instead of dereferencing the pointer, the values are always found by iterating on the pointer's address by adding
+	the size of the structure sent to the function, because void pointers cannot be dereferenced.
+	The comparison between key and array always needs to be defined as a separate function and be sent to the binary
+	search function, this allows us to avoid recreating this function if we want to make comparisons between the 
+	different structures we have in this project.
 */
 int binarySearch (void* array, void* key, int start, int end, size_t size, int (*compare)(const void*, const void*)) {
 	int middle;
@@ -99,7 +144,8 @@ int binarySearch (void* array, void* key, int start, int end, size_t size, int (
 }
 
 /*
-	Binary search that returns more than one result
+	Generic binary search function that returns all key ocurrences.
+	After finding the key, it searches the other key ocurrences to the right and left of the array.
 */
 int binarySearchAll (void* array, void* key, int start, int end, int *result, size_t size, int (*compare)(const void*, const void*)) {
 	int middle;
@@ -137,6 +183,9 @@ int binarySearchAll (void* array, void* key, int start, int end, int *result, si
 	}
 }
 
+/*
+	A function to save the primary Index into a file.
+*/
 void savePrimaryIndex (FILE *file, primaryIndex *primaryIndexArray, int size) {
 	int i;
 
@@ -149,6 +198,9 @@ void savePrimaryIndex (FILE *file, primaryIndex *primaryIndexArray, int size) {
 	}
 }
 
+/*
+	A function save the winner Index into a file.
+*/
 void saveWinnerIndex (FILE *file, winnerIndex *winnerIndexArray, int size) {
 	int i;
 
@@ -160,6 +212,9 @@ void saveWinnerIndex (FILE *file, winnerIndex *winnerIndexArray, int size) {
 	}
 }
 
+/*
+	A function to save the MVP Index into a file.
+*/
 void saveMVPIndex (FILE *file, mvpIndex *mvpIndexArray, int size) {
 	int i;
 
@@ -171,6 +226,9 @@ void saveMVPIndex (FILE *file, mvpIndex *mvpIndexArray, int size) {
 	}
 }
 
+/*
+	A function to load the primary Index into the memory.
+*/
 int loadPrimaryIndex (FILE *file, primaryIndex *primaryIndexArray) {
 	int i = 0;
 	while (fscanf (file, "%[^@]@%d@\n", primaryIndexArray[i].primaryKey, &primaryIndexArray[i].offset) == 2) {
@@ -179,6 +237,9 @@ int loadPrimaryIndex (FILE *file, primaryIndex *primaryIndexArray) {
 	return i;
 }
 
+/*
+	A function to load the winner Index into the memory.
+*/
 void loadWinnerIndex (FILE *file, winnerIndex *winnerIndexArray) {
 	int i = 0;
 	while (fscanf (file, "%[^@]@%[^@]@\n", winnerIndexArray[i].winner ,winnerIndexArray[i].primaryKey) == 2) {
@@ -186,6 +247,9 @@ void loadWinnerIndex (FILE *file, winnerIndex *winnerIndexArray) {
 	}
 }
 
+/*
+	A function to load the MVP Index into the memory.
+*/
 void loadMVPIndex (FILE *file, mvpIndex *mvpIndexArray) {
 	int i = 0;
 	while (fscanf (file, "%[^@]@%[^@]@\n", mvpIndexArray[i].mvpNickname , mvpIndexArray[i].primaryKey) == 2) {
@@ -193,11 +257,19 @@ void loadMVPIndex (FILE *file, mvpIndex *mvpIndexArray) {
 	}
 }
 
+/*
+	Sometimes we need to guarantee the files are persisted into the file system.
+	This function exists to fulfill that purpose.
+*/
 void persistFile (FILE* file, char* name) {
 	fclose (file);
 	file = fopen (name, "r+");
 }
 
+/*
+	This is a function that saves all of the indexes and persists them on the file system.
+	By the end of this process, the index consistency is correct.
+*/
 void saveIndexFiles (FILE * primaryFile, FILE* winnerFile, FILE* mvpFile, 
 						primaryIndex* primaryArray, winnerIndex* winnerArray, mvpIndex* mvpArray, int size) {
 	savePrimaryIndex (primaryFile, primaryArray, size);
@@ -211,6 +283,14 @@ void saveIndexFiles (FILE * primaryFile, FILE* winnerFile, FILE* mvpFile,
 	setIndexConsistency (primaryFile, 1);
 }
 
+/*
+	This is a function to create all indexes.
+	Seeks each register using its REG_SIZE and position in the file,
+	scans the relevant values from the file,
+	creates their index entry for all indexes,
+	sorts the indexes and save them.
+	It also return the registerCount that will be used by the program as a whole.
+*/
 int createIndexes (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryIndexArray, 
 						FILE* winnerFile, winnerIndex *winnerIndexArray, 
 						FILE* mvpFile, mvpIndex *mvpIndexArray) {
@@ -245,18 +325,28 @@ int createIndexes (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryIndex
 	return registerCount;
 }
 
+/*
+	A function to check the indexes consistency.
+*/
 int checkIndexConsistency (FILE* primaryFile) {
 	int isOk; 
 	fscanf (primaryFile, "%d\n", &isOk);
 	return isOk;
 }
 
+/*
+	A function to set the index consistency to a given value.
+*/
 void setIndexConsistency (FILE* primaryFile, int isOk) {
 	fseek (primaryFile, 0, SEEK_SET);
 	fprintf(primaryFile, "%d\n", isOk);
 	persistFile (primaryFile, "iprimary.idx");
 }
 
+/*
+	Load indexes from the file system into the memory.
+	Getting the register count is necessary because the program uses it.
+*/
 int loadIndexes (FILE* primaryFile, primaryIndex *primaryIndexArray, 
 						FILE* winnerFile, winnerIndex *winnerIndexArray, 
 						FILE* mvpFile, mvpIndex *mvpIndexArray) {
@@ -267,7 +357,14 @@ int loadIndexes (FILE* primaryFile, primaryIndex *primaryIndexArray,
 	return registerCount;
 }
 
-
+/*
+	A simple function to create the primary key as specified.
+	A primary key is composed of:
+		- The first letter of the blue team
+		- The first letter of the red team
+		- The two first letters of the MVP's nickname
+		- The day and month of the match.
+*/
 void createPrimaryKey (lolMatch *element) {
 	element->primaryKey[0] = toupper (element->blueTeam[0]);
 	element->primaryKey[1] = toupper (element->redTeam[0]);
@@ -280,6 +377,9 @@ void createPrimaryKey (lolMatch *element) {
 	element->primaryKey[8] = '\0';
 }
 
+/*
+	A simple function to print a registered match.
+*/
 void printMatch (lolMatch match) {
 	printf("%s\n", match.primaryKey);
 	printf("%s\n", match.blueTeam);
@@ -293,6 +393,14 @@ void printMatch (lolMatch match) {
 	printf("\n");
 }
 
+/*
+	From this point on, there are some functions defined to grab user input. 
+*/
+
+/*
+	A function to scan the score value, it checks if the input is a number. And if the size of the input was 2.
+	If the score doesn't follow the format, it asks for the same input again. 
+*/
 void scanScore (char *score) {
 	char buffer[10];
 
@@ -304,6 +412,11 @@ void scanScore (char *score) {
 	}
 }
 
+/*
+	A function to scan the winner team value, it checks if the input is smaller than 39 characters. 
+	And if the winner team is the blue or red team, it needs to be one of them. 
+	It asks for the same input again in case of error. 
+*/
 void scanWinnerTeam (lolMatch *element) {
 	int isEqualToBlue, isEqualToRed;
 	char winnerTeam[200];
@@ -324,6 +437,10 @@ void scanWinnerTeam (lolMatch *element) {
 	}
 }
 
+/*
+	A function to scan the blue team value, it checks if the input is smaller than 39 characters.
+	It asks for the same input again in case of error.
+*/
 void scanBlueTeam (lolMatch *element) {
 	char blueTeam[200];
 	scanf (" %[^\n]", blueTeam);
@@ -337,6 +454,10 @@ void scanBlueTeam (lolMatch *element) {
 	}
 }
 
+/*
+	A function to scan the red team value, it checks if the input is smaller than 39 characters.
+	It asks for the same input again in case of error.
+*/
 void scanRedTeam (lolMatch *element) {
 	char redTeam[200];
 	scanf (" %[^\n]", redTeam);
@@ -349,6 +470,10 @@ void scanRedTeam (lolMatch *element) {
 	}
 }
 
+/*
+	A function to scan the MVP value, it checks if the input is smaller than 39 characters.
+	It asks for the same input again in case of error.
+*/
 void scanMVP (lolMatch *element) {
 	char nickname[200];
 	scanf (" %[^\n]", nickname);
@@ -361,6 +486,10 @@ void scanMVP (lolMatch *element) {
 	}
 }
 
+/*
+	A function to scan both teams. 
+	It verifies if the teams are different, in case they are equal, the input should be restarted.
+*/
 void scanTeams (lolMatch *element) {
 	scanBlueTeam (element);
 	scanRedTeam (element);
@@ -371,6 +500,11 @@ void scanTeams (lolMatch *element) {
 	}
 }
 
+/*
+	A function to scan the date.
+	Checks if the date format is correct.
+	It asks for the same input again in case of error.	
+*/
 void scanDate (lolMatch *element) {
 	char date[11];
 	int day, month, year;
@@ -396,6 +530,11 @@ void scanDate (lolMatch *element) {
 	}
 }
 
+/*
+	A function to scan the date.
+	Checks if the match duration format is correct.
+	It asks for the same input again in case of error.	
+*/
 void scanMatchDuration (char* element) {
 	char duration[100];
 	int hours, minutes;
@@ -410,6 +549,9 @@ void scanMatchDuration (char* element) {
 	}
 }
 
+/*
+	A function to read a match and create the match primary key.
+*/
 void readMatch (lolMatch *element) {
 	scanTeams (element);
 	scanDate (element);
@@ -422,6 +564,12 @@ void readMatch (lolMatch *element) {
 	createPrimaryKey (element);
 }
 
+/*
+	A function to insert a match.
+	Prints the register format to the reg_match string, and then fills the remaining space with #.
+	Seeks the end of file, and writes the reg_match to the file.
+	Persists file and updates all indexes and the size of the DB.
+*/
 int insertMatch (FILE *dataFile, FILE *primaryFile, FILE *winnerFile, FILE *mvpFile,
 				primaryIndex* primaryArray, winnerIndex* winnerArray, mvpIndex* mvpArray, int size, lolMatch element) {
 	char reg_match[REG_SIZE + 1];
@@ -458,6 +606,12 @@ int insertMatch (FILE *dataFile, FILE *primaryFile, FILE *winnerFile, FILE *mvpF
 	return size;
 }
 
+/*
+	A function to add a match. It reads a match,
+	Verifies if the primary key already exists,
+	If it doesn't, then the index consistency is set to 0
+	and the match is inserted. 
+*/
 int addMatch (FILE *dataFile, FILE *primaryFile, FILE *winnerFile, FILE *mvpFile,
 				primaryIndex* primaryArray, winnerIndex* winnerArray, mvpIndex* mvpArray, int size) {
 	lolMatch element;
@@ -476,6 +630,10 @@ int addMatch (FILE *dataFile, FILE *primaryFile, FILE *winnerFile, FILE *mvpFile
 	return size;
 }
 
+/*
+	A function to remove a match. 
+	Finds the primary key and marks the registered match as removed.
+*/
 void removeMatch (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryArray, winnerIndex *winnerArray, mvpIndex *mvpArray, int size) {
 	primaryIndex match;
 	int primaryPosition;
@@ -504,6 +662,9 @@ void removeMatch (FILE* dataFile, FILE* primaryFile, primaryIndex *primaryArray,
 	}
 }
 
+/*
+	A function to print a match after scanning it from a file.
+*/
 void printSearchMatch (FILE *dataFile, primaryIndex *index, int primaryPosition) {
 	lolMatch match;
 	fseek (dataFile, index[primaryPosition].offset, SEEK_SET);
@@ -515,6 +676,9 @@ void printSearchMatch (FILE *dataFile, primaryIndex *index, int primaryPosition)
 	printMatch (match);
 }
 
+/*
+	A function to print all matches ordered by primary key.
+*/
 void printMatchesOrderByPrimaryKey (FILE* dataFile, primaryIndex *index, int size) {
 	int i;
 
@@ -525,6 +689,10 @@ void printMatchesOrderByPrimaryKey (FILE* dataFile, primaryIndex *index, int siz
 	}
 }
 
+/*
+	A function to print all matches ordered by winner.
+	It is necessary to find the position of the winner ordered register in the primaryIndex.
+*/
 void printMatchesOrderByWinner (FILE* dataFile, winnerIndex *index, primaryIndex *primaryArray, int size) {
 	int i, primaryPosition;
 	primaryIndex element;
@@ -538,6 +706,10 @@ void printMatchesOrderByWinner (FILE* dataFile, winnerIndex *index, primaryIndex
 	}
 }
 
+/*
+	A function to print all matches ordereb by mvp.
+	It is necessary to find the position of the mvp ordered register in the primaryIndex.
+*/
 void printMatchesOrderByMVP (FILE* dataFile, mvpIndex *index, primaryIndex *primaryArray, int size) {
 	int i, primaryPosition;
 	primaryIndex element;
@@ -551,6 +723,10 @@ void printMatchesOrderByMVP (FILE* dataFile, mvpIndex *index, primaryIndex *prim
 	}
 }
 
+/*
+	A function to search a match by primary key.
+	It only uses the binary search to grab the correct match.
+*/
 void searchMatchesOrderByPrimaryKey (FILE* dataFile, primaryIndex *index, primaryIndex element, int size) {
 	int primaryPosition;
 
@@ -563,6 +739,10 @@ void searchMatchesOrderByPrimaryKey (FILE* dataFile, primaryIndex *index, primar
  	}
 }
 
+/*
+	A function to search matches by winner. At first, it needs to have a result set of winners found.
+	And then, it just gets the primary position and prints it using the print search match.
+*/
 void searchMatchesOrderByWinner (FILE* dataFile, winnerIndex *index, primaryIndex *primaryArray, winnerIndex element, int size) {
 	int primaryPosition, i;
 	int *result, resultSize;
@@ -587,6 +767,10 @@ void searchMatchesOrderByWinner (FILE* dataFile, winnerIndex *index, primaryInde
 	}
 }
 
+/*
+	A function to search matches by MVP. At first, it needs to have a result set of MVPs found.
+	And then, it just gets the primary position and prints it using the print search match.
+*/
 void searchMatchesOrderByMVP (FILE* dataFile, mvpIndex *index, primaryIndex *primaryArray, mvpIndex element, int size) {
 	int primaryPosition, i;
 	int *result, resultSize;
@@ -611,6 +795,9 @@ void searchMatchesOrderByMVP (FILE* dataFile, mvpIndex *index, primaryIndex *pri
 	}	
 }
 
+/*
+	A function to manage the options of listing matches.
+*/
 void listMatches (FILE* dataFile, primaryIndex *pIndex, winnerIndex *wIndex, mvpIndex *mIndex, int size) { 
 	char menuOption;
 	/*printListOptions();*/
@@ -630,6 +817,9 @@ void listMatches (FILE* dataFile, primaryIndex *pIndex, winnerIndex *wIndex, mvp
 	}
 }
 
+/*
+	A function to manage the options of searching matches. 
+*/
 void searchMatches (FILE* dataFile, primaryIndex *pIndex, winnerIndex *wIndex, mvpIndex *mIndex, int size) { 
 	char menuOption;
 	char search[40];
@@ -660,6 +850,9 @@ void searchMatches (FILE* dataFile, primaryIndex *pIndex, winnerIndex *wIndex, m
 	}
 }
 
+/*
+	A function that sorts the indexes.
+*/
 void sortIndexes (primaryIndex *primaryArray, winnerIndex *winnerArray, mvpIndex *mvpArray, int registerCount) {
 
 	qsort (primaryArray, registerCount, sizeof(primaryIndex), compareKeys);
@@ -671,9 +864,15 @@ void sortIndexes (primaryIndex *primaryArray, winnerIndex *winnerArray, mvpIndex
 	qsort (mvpArray, registerCount, sizeof(mvpIndex), compareMVP);
 }
 
+/*
+	A function to update a match. Firsst it scans the primary key. 
+	Then it verifies if the register exists using the primary Index.
+	If it exists, then the consistency is set to 0,
+	the register is seeked and updated and the database file is persisted in the disk.
+*/
 void updateMatch (FILE* dataFile, FILE* primaryFile, primaryIndex *pIndex, winnerIndex *wIndex, mvpIndex *mIndex, int size) { 
 	char search[9], matchDuration[6];
-	int primaryPosition, winnerPosition, mvpPosition;
+	int primaryPosition;
 	primaryIndex element;
 	lolMatch match;
 
@@ -681,8 +880,6 @@ void updateMatch (FILE* dataFile, FILE* primaryFile, primaryIndex *pIndex, winne
 	strcpy (element.primaryKey, search);
 
 	primaryPosition = binarySearch (pIndex, &element, 0, size - 1, sizeof (primaryIndex), compareKeys);
-	winnerPosition = binarySearch (wIndex, &element, 0, size - 1, sizeof (winnerIndex), compareKeyWithWinner);
-	mvpPosition = binarySearch (mIndex, &element, 0, size - 1, sizeof (mvpIndex), compareKeyWithMVP);
 
 	if (primaryPosition != -1 && pIndex[primaryPosition].offset != -1) {
 		scanMatchDuration (matchDuration);
@@ -709,6 +906,9 @@ void updateMatch (FILE* dataFile, FILE* primaryFile, primaryIndex *pIndex, winne
 	}
 }
 
+/*
+	Two functions to print options, currently not in use. 
+*/
 void printOptions()	{ 
 	printf("1. Cadastrar.\n");
 	printf("2. Alteração.\n");
@@ -725,6 +925,11 @@ void printListOptions() {
 	printf("3. por apelido do MVP:\n");
 }
 
+/*
+	This function deletes the files that were marked as removed from the database file and all of the indexes.
+	It creates a file copy and copies all registers to it but the ones removed.
+	By the end the database file is replaced by the file copy, and all indexes are recreated.
+*/
 int freeSpace (FILE *dataFile, FILE *primaryFile, FILE *winnerFile, FILE *mvpFile,
 				primaryIndex* primaryArray, winnerIndex* winnerArray, mvpIndex* mvpArray, int size) {
 	FILE *temporaryFile;

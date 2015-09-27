@@ -30,10 +30,17 @@ int main (int argc, char *argv[]) {
 		matchFileExists = 0;
 	}
 
+	/*
+		Loads the index files.
+	*/
 	primaryIndexFile = fileExists(primaryIndexFile, "iprimary.idx");
 	winnerIndexFile = fileExists(winnerIndexFile, "iwinner.idx");
 	mvpIndexFile = fileExists(mvpIndexFile, "imvp.idx");
 
+	/*
+		If all files are correct, they are loaded into memory,
+		if not they are all recreated from scratch.
+	*/
 	if (primaryIndexFile && winnerIndexFile && mvpIndexFile && matchFileExists ) {
 		if (checkIndexConsistency(primaryIndexFile)) {
 			registerCount = loadIndexes (primaryIndexFile, primaryIndexArray, 
@@ -53,6 +60,16 @@ int main (int argc, char *argv[]) {
 						winnerIndexFile, winnerIndexArray, mvpIndexFile, mvpIndexArray);
 	}
 
+	/*
+		Simple loop that gets a menu option and executes one of the programs options:
+		 1 - Insert Match
+		 2 - Update Match
+		 3 - Remove Match
+		 4 - Search Match
+		 5 - List Matches
+		 6 - Free Space
+		 7 - Close Program
+	*/
 	while (runningProgram) {
 		/*printOptions();*/
 		scanf(" %c", &menuOption);

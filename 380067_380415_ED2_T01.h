@@ -1,3 +1,11 @@
+/*
+	Authors:	Rodrigo Nascimento de Carvalho 380067
+				Philippe César Ramos 380415
+	Description: 	This is a League of Legends Championship matches database, built using files and indexes. 
+					This is the library prototype definition used to manipulate the indexes and files for this application.
+*/
+
+
 #ifndef _380067_380415_ED2_T01_   
 #define _380067_380415_ED2_T01_
 
