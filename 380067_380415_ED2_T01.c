@@ -134,9 +134,9 @@ int binarySearch (void* array, void* key, int start, int end, size_t size, int (
 		middle = start + ((end - start)/2);
 		middleElement = array + middle * size;
 		if ((*compare)(middleElement, key) < 0) { 
-			binarySearch (array, key, middle + 1, end, size, compare);
+			return binarySearch (array, key, middle + 1, end, size, compare);
 		} else if ((*compare)(middleElement, key) > 0) { 
-			binarySearch (array, key, start, middle - 1, size, compare);
+			return binarySearch (array, key, start, middle - 1, size, compare);
 		} else { 
 			return middle;
 		}
@@ -159,9 +159,9 @@ int binarySearchAll (void* array, void* key, int start, int end, int *result, si
 		middle = start + ((end - start)/2);
 		middleElement = array + middle * size;
 		if ((*compare)(middleElement, key) < 0) { 
-			binarySearchAll (array, key, middle + 1, end, result, size, compare);
+			return binarySearchAll (array, key, middle + 1, end, result, size, compare);
 		} else if ((*compare)(middleElement, key) > 0) { 
-			binarySearchAll (array, key, start, middle - 1, result, size, compare);
+			return binarySearchAll (array, key, start, middle - 1, result, size, compare);
 		} else {
 			result[i] = middle;
 			nextElement = middleElement + size;
@@ -801,7 +801,8 @@ void searchMatchesOrderByMVP (FILE* dataFile, mvpIndex *index, primaryIndex *pri
 void listMatches (FILE* dataFile, primaryIndex *pIndex, winnerIndex *wIndex, mvpIndex *mIndex, int size) { 
 	char menuOption;
 	/*printListOptions();*/
-	scanf(" %c", &menuOption);
+	getchar();
+	scanf("%c", &menuOption);
 	switch(menuOption) { 
 		case '1':
 			printMatchesOrderByPrimaryKey (dataFile, pIndex, size);

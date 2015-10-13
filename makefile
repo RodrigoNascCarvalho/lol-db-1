@@ -1,7 +1,7 @@
 TARGET = main
 DEPENDENCY = 380067_380415_ED2_T01
 CC = gcc
-CFLAGS = -ansi
+CFLAGS = 
 
 default: sistema
 
