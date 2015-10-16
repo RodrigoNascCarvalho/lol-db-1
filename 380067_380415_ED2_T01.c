@@ -150,6 +150,7 @@ int binarySearch (void* array, void* key, int start, int end, size_t size, int (
 int binarySearchAll (void* array, void* key, int start, int end, int *result, size_t size, int (*compare)(const void*, const void*)) {
 	int middle;
 	int i = 0;
+	int tempMiddle;
 	void *middleElement;
 	void *nextElement;
 	void *prevElement;
@@ -166,17 +167,19 @@ int binarySearchAll (void* array, void* key, int start, int end, int *result, si
 			result[i] = middle;
 			nextElement = middleElement + size;
 			prevElement = middleElement - size;
+			tempMiddle = middle;
 			while ((*compare)(nextElement, key) == 0) {
 				i += 1;
-				middle += 1;
+				tempMiddle += 1;
 				nextElement = nextElement + size;
-				result[i] = middle; 
+				result[i] = tempMiddle; 
 			}
+			tempMiddle = middle;
 			while ((*compare)(prevElement, key) == 0) {
 				i += 1;
-				middle -= 1;
+				tempMiddle -= 1;
 				prevElement = prevElement - size;
-				result[i] = middle;
+				result[i] = tempMiddle;
 			}
 			return i + 1;
 		}
