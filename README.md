@@ -1,5 +1,5 @@
 # League of Legends Championship Management System - Version 1
-This is an implementation of a program that maintains a database for a League of Legends Championship using just a data file and indexes in memory.
+This is an implementation of a program that maintains a database for a League of Legends Championship using just a data file and indexes in memory. It was implemented as part of an exercise for a Data Structure class. 
 
 The database contains the following fields:
 
