@@ -49,4 +49,4 @@ Inside the program, the following options are provided to the final user:
   - Using Primary Key
   - Using Winner
   - Using MVP
-- 6. Free Storage
+- 6. Free Memory
