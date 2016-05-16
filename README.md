@@ -14,6 +14,7 @@ The database contains the following fields:
 
 Each entry in the database will have a maximum storage of 192 bytes per entry. These fields are stored in a data file as shown below:
 
+```
 FTFE0705@Fnatic@Team SoloMid@07/05/2015@31:47@Fnatic@15@06@Febiv
 en@#############################################################
 ################################################################
@@ -29,6 +30,7 @@ on@#############################################################
 JNCH0209@Jin Air Green Wings@NaJin e-mFire@02/09/2015@39:51@Jin
 Air Green Wings@08@03@Chei@#####################################
 ################################################################
+```
 
 This solution implements three indexes:
 - Primary Index containing the Primary Key and offset of the entry in the file
@@ -36,15 +38,15 @@ This solution implements three indexes:
 - Secondary MVP Index relating a MVP to its Primary Key
 
 Inside the program, the following options are provided to the final user:
-1- Create new match
-2- Remove match using Primary Key
-3- Update Match Duration using Primary Key 
-4- Search matches:
+- 1. Create new match
+- 2. Remove match using Primary Key
+- 3. Update Match Duration using Primary Key 
+- 4. Search matches:
   - Using Primary Key
   - Using Winner
   - Using MVP
-5- List all matches:
+- 5. List all matches:
   - Using Primary Key
   - Using Winner
   - Using MVP
-6- Free Storage
+- 6. Free Storage
